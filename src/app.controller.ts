@@ -1,0 +1,34 @@
+import express from 'express'
+import type {Express, Request, Response} from 'express'
+import cors from 'cors'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
+import {resolve} from 'node:path'
+import { config } from 'dotenv'
+import authRouter from'./modules/auth/auth.controller'
+import { globalErrorHandler } from './utils/globalErrorHandler'
+config({path:resolve("./config/.env.development")})
+const limiter = rateLimit({
+    windowMs:60 * 60000,
+    limit:2000,
+    message:{error:"Too many requests from this IP, please try again after an hour"},
+    statusCode:429,
+})
+const bootstrap = ():void=>{
+    const app : Express  =  express()
+    const port : number | string = process.env.PORT || 5000
+    app.use(express.json(), helmet() , cors())
+    app.use(limiter)
+    app.get('/',(req : Request , res:Response)=>{
+        res.json({message:"Welcome to the Social App"})
+    })
+    app.use("/api/auth", authRouter)
+    app.all('{/*dummy}',(req:Request,res:Response)=>{
+        res.status(404).json({error:"Route not found"})
+    })
+    app.listen(port,()=>{
+        console.log(`server is running on port ${port}`);
+    })
+    app.use(globalErrorHandler)
+}
+export default bootstrap; 
