@@ -6,7 +6,8 @@ import rateLimit from 'express-rate-limit'
 import {resolve} from 'node:path'
 import { config } from 'dotenv'
 import authRouter from'./modules/auth/auth.controller'
-import { globalErrorHandler } from './utils/globalErrorHandler'
+import { globalErrorHandler } from './utils/response/error.responce'
+import connectDB from './db/connection.db'
 config({path:resolve("./config/.env.development")})
 const limiter = rateLimit({
     windowMs:60 * 60000,
@@ -14,14 +15,14 @@ const limiter = rateLimit({
     message:{error:"Too many requests from this IP, please try again after an hour"},
     statusCode:429,
 })
-const bootstrap = ():void=>{
+const bootstrap = async ():Promise<void>=>{
     const app : Express  =  express()
     const port : number | string = process.env.PORT || 5000
     app.use(express.json(), helmet() , cors())
     app.use(limiter)
     app.get('/',(req : Request , res:Response)=>{
         res.json({message:"Welcome to the Social App"})
-    })
+    }) 
     app.use("/api/auth", authRouter)
     app.all('{/*dummy}',(req:Request,res:Response)=>{
         res.status(404).json({error:"Route not found"})
@@ -30,5 +31,6 @@ const bootstrap = ():void=>{
         console.log(`server is running on port ${port}`);
     })
     app.use(globalErrorHandler)
+    await connectDB()
 }
-export default bootstrap; 
+export default bootstrap;  

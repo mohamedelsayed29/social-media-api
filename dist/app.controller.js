@@ -10,7 +10,8 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const node_path_1 = require("node:path");
 const dotenv_1 = require("dotenv");
 const auth_controller_1 = __importDefault(require("./modules/auth/auth.controller"));
-const globalErrorHandler_1 = require("./utils/globalErrorHandler");
+const error_responce_1 = require("./utils/response/error.responce");
+const connection_db_1 = __importDefault(require("./db/connection.db"));
 (0, dotenv_1.config)({ path: (0, node_path_1.resolve)("./config/.env.development") });
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 60 * 60000,
@@ -18,7 +19,7 @@ const limiter = (0, express_rate_limit_1.default)({
     message: { error: "Too many requests from this IP, please try again after an hour" },
     statusCode: 429,
 });
-const bootstrap = () => {
+const bootstrap = async () => {
     const app = (0, express_1.default)();
     const port = process.env.PORT || 5000;
     app.use(express_1.default.json(), (0, helmet_1.default)(), (0, cors_1.default)());
@@ -33,6 +34,7 @@ const bootstrap = () => {
     app.listen(port, () => {
         console.log(`server is running on port ${port}`);
     });
-    app.use(globalErrorHandler_1.globalErrorHandler);
+    app.use(error_responce_1.globalErrorHandler);
+    await (0, connection_db_1.default)();
 };
 exports.default = bootstrap;
