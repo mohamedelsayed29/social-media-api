@@ -4,6 +4,7 @@ import { UserModel } from "../../db/models/user.model";
 import { ConflictException } from "../../utils/response/error.responce";
 import { UserRepository } from "../../db/repository/user.repository";
 import { generateHash } from "../../utils/security/hash.security";
+import { emailEventEmitter } from "../../utils/event/email.event";
 
 class AuthenticationService{
     private _userModel = new UserRepository(UserModel) 
@@ -37,7 +38,10 @@ class AuthenticationService{
                 }],
                 options:{validateBeforeSave:true}
             }) || []
- 
+            
+            emailEventEmitter.emit("confirmationEmail",{
+                to:email,
+            })
         return res.status(201).json({message:"Signup successful",data:{user}});
     }
 

@@ -4,6 +4,7 @@ const user_model_1 = require("../../db/models/user.model");
 const error_responce_1 = require("../../utils/response/error.responce");
 const user_repository_1 = require("../../db/repository/user.repository");
 const hash_security_1 = require("../../utils/security/hash.security");
+const email_event_1 = require("../../utils/event/email.event");
 class AuthenticationService {
     _userModel = new user_repository_1.UserRepository(user_model_1.UserModel);
     constructor() { }
@@ -25,6 +26,9 @@ class AuthenticationService {
                 }],
             options: { validateBeforeSave: true }
         }) || [];
+        email_event_1.emailEventEmitter.emit("confirmationEmail", {
+            to: email,
+        });
         return res.status(201).json({ message: "Signup successful", data: { user } });
     };
     login = async (req, res) => {
