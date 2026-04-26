@@ -4,7 +4,6 @@ import { BadRequestException } from "../utils/response/error.responce"
 import { ZodError } from "zod"
 import z from "zod"
 
-
 type KeyReqType = keyof Request
 type SchemaType = Partial<Record<KeyReqType, ZodType >>
 type ValidationErrorsType = Array<{key: KeyReqType, issues:Array<{message: string, path: string | number | undefined | symbol}>}> 
@@ -36,5 +35,12 @@ export const generalFields ={
     username:z.string().min(3).max(20),
     email:z.email(),
     password:z.string().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,}$/),
-    confirmPassword:z.string()
-} 
+    confirmPassword:z.string(),
+    firstName:z.string().min(2).max(25),
+    lastName:z.string().min(2).max(25),
+    phoneNumber:z.string().regex(/^\+?[1-9]\d{1,14}$/),
+    gender: z.preprocess((val)=>{
+        if(typeof val === "string") return val.trim().toLowerCase();
+        return val;
+    }, z.enum(["male", "female", "other"]).optional())
+}

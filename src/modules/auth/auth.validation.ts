@@ -11,6 +11,10 @@ export const login = {
 export const signup = {
     body:login.body.extend({
         username:generalFields.username,
+        firstName:generalFields.firstName,
+        lastName:generalFields.lastName,
+        phoneNumber:generalFields.phoneNumber,
+        gender:generalFields.gender,
         confirmPassword:generalFields.confirmPassword
     }).superRefine((data,ctx)=>{
         if(data.password !== data.confirmPassword){

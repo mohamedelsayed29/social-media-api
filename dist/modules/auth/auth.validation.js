@@ -15,6 +15,10 @@ exports.login = {
 exports.signup = {
     body: exports.login.body.extend({
         username: validation_middleware_1.generalFields.username,
+        firstName: validation_middleware_1.generalFields.firstName,
+        lastName: validation_middleware_1.generalFields.lastName,
+        phoneNumber: validation_middleware_1.generalFields.phoneNumber,
+        gender: validation_middleware_1.generalFields.gender,
         confirmPassword: validation_middleware_1.generalFields.confirmPassword
     }).superRefine((data, ctx) => {
         if (data.password !== data.confirmPassword) {

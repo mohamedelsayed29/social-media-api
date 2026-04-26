@@ -9,5 +9,13 @@ class DatabaseRepository {
     async create({ data, options }) {
         return await this.model.create(data, options);
     }
+    async findOne({ filter, select, options }) {
+        const doc = this.model.findOne(filter).select(select || "");
+        if (options?.populate)
+            doc.populate(options.populate);
+        if (options?.lean)
+            doc.lean(options.lean);
+        return await doc.exec();
+    }
 }
 exports.DatabaseRepository = DatabaseRepository;

@@ -32,5 +32,13 @@ exports.generalFields = {
     username: zod_1.default.string().min(3).max(20),
     email: zod_1.default.email(),
     password: zod_1.default.string().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,}$/),
-    confirmPassword: zod_1.default.string()
+    confirmPassword: zod_1.default.string(),
+    firstName: zod_1.default.string().min(2).max(25),
+    lastName: zod_1.default.string().min(2).max(25),
+    phoneNumber: zod_1.default.string().regex(/^\+?[1-9]\d{1,14}$/),
+    gender: zod_1.default.preprocess((val) => {
+        if (typeof val === "string")
+            return val.trim().toLowerCase();
+        return val;
+    }, zod_1.default.enum(["male", "female", "other"]).optional())
 };

@@ -1,24 +1,44 @@
 import { Request, Response } from "express";
 import { ISignupDto } from "./auth.dto";
-import { DatabaseRepository } from "../../db/repository/database.repository";
-import { IUser, UserModel } from "../../db/models/user.model";
-import { BadRequestException } from "../../utils/response/error.responce";
+import { UserModel } from "../../db/models/user.model";
+import { ConflictException } from "../../utils/response/error.responce";
+import { UserRepository } from "../../db/repository/user.repository";
+import { generateHash } from "../../utils/security/hash.security";
 
 class AuthenticationService{
-    private _userModel = new DatabaseRepository<IUser>(UserModel)
+    private _userModel = new UserRepository(UserModel) 
     constructor(){}
     signup = async(req:Request,res:Response):Promise<Response>=>{
 
-        let {username,email,password} : ISignupDto = req.body;
-
-        console.log({username,email,password});
+        let {
+            username,
+            firstName,
+            lastName,
+            email,
+            password,
+            phoneNumber,
+        }: ISignupDto = req.body;
+        console.log(req.body);
         
+        const checkUser = await this._userModel.findOne({filter:{email},select:"email",options:{lean:true}})
+        console.log(checkUser);
+        
+        if(checkUser) throw new ConflictException("Email already exists")
 
-        const [user] = await this._userModel.create({data:[{username,email,password}], options:{validateBeforeSave:true}}) || []
-
-        if(!user) throw new BadRequestException("Failed to create user")
+        const [user] = await this._userModel.create(
+            {
+                data:[{
+                    username,
+                    firstName,
+                    lastName,
+                    email,
+                    password : await generateHash(password),
+                    phoneNumber,
+                }],
+                options:{validateBeforeSave:true}
+            }) || []
  
-        return res.status(201).json({message:"Signup successful",data: user});
+        return res.status(201).json({message:"Signup successful",data:{user}});
     }
 
 

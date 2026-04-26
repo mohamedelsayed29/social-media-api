@@ -16,7 +16,7 @@ export interface IUser{
     username:string;
     email:string;
     phoneNumber?:string;
-    gender:GenderEnum
+    gender?:GenderEnum
     address?:string; 
     password:string;
     confirmEmailOtp?:string;
@@ -34,7 +34,7 @@ const userSchema = new Schema<IUser>(
         lastName:{type:String , required:true , minLength:2 , maxLength:25 , trim:true},
         email:{type:String , required:true , trim:true , unique:true}, 
         phoneNumber:{type:String , required:true},
-        gender:{type:String, enum:GenderEnum, required:true},
+        gender:{type:String, enum:GenderEnum},
         address:{type:String}, 
         password:{type:String , required:true},
         confirmEmailOtp:{type:String},
