@@ -6,7 +6,7 @@ import rateLimit from 'express-rate-limit'
 import {resolve} from 'node:path'
 import { config } from 'dotenv'
 import authRouter from'./modules/auth/auth.controller'
-import { globalErrorHandler } from './utils/response/error.responce'
+import { globalErrorHandler, NotFoundException } from './utils/response/error.responce'
 import connectDB from './db/connection.db'
 config({path:resolve("./config/.env.development")})
 const limiter = rateLimit({
@@ -25,7 +25,7 @@ const bootstrap = async ():Promise<void>=>{
     }) 
     app.use("/api/auth", authRouter)
     app.all('{/*dummy}',(req:Request,res:Response)=>{
-        res.status(404).json({error:"Route not found"})
+        throw new NotFoundException("Route not found")
     })
     app.listen(port,()=>{
         console.log(`server is running on port ${port}`);
