@@ -11,7 +11,7 @@ exports.emailEventEmitter = new node_events_1.default();
 exports.emailEventEmitter.on("confirmationEmail", async (data) => {
     try {
         data.subject = "confirmation email";
-        data.html = (0, verify_template_email_1.verifyEmailTemplate)({ otp: "2343", title: "Email Confirmation" });
+        data.html = (0, verify_template_email_1.verifyEmailTemplate)({ otp: data.otp, title: "Email Confirmation" });
         await (0, send_email_1.sendEmail)(data);
     }
     catch (error) {

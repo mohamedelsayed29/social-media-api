@@ -2,7 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyEmailTemplate = void 0;
 const verifyEmailTemplate = ({ otp, title, userName = "there", appName = "Vybe", otpExpiry = "10 minutes", securityUrl = "#", helpUrl = "#", twitterUrl = "#", instagramUrl = "#", tiktokUrl = "#", unsubscribeUrl = "#", privacyUrl = "#", termsUrl = "#", companyAddress = "", }) => {
-    const digits = otp.padStart(6, "0").slice(0, 6).split("");
+    const otpStr = String(otp ?? "");
+    const digits = otpStr.padStart(6, "0").slice(0, 6).split("");
     const [d1, d2, d3, d4, d5, d6] = digits;
     const year = new Date().getFullYear();
     return `<!DOCTYPE html>
@@ -13,45 +14,38 @@ const verifyEmailTemplate = ({ otp, title, userName = "there", appName = "Vybe",
   <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
   <title>${title}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-
+    /* Light, simplified theme for broad email compatibility */
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background-color: #0d0e14;
-      font-family: 'Sora', sans-serif;
+      background-color: #f5f7fa;
+      font-family: 'Sora', 'Helvetica Neue', Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
+      color: #1f2937;
     }
 
     .wrapper {
       width: 100%;
-      background-color: #0d0e14;
-      padding: 48px 16px;
+      background-color: #f5f7fa;
+      padding: 40px 16px;
     }
 
     .container {
-      max-width: 520px;
+      max-width: 620px;
       margin: 0 auto;
-      background: #13141f;
-      border-radius: 20px;
+      background: #ffffff;
+      border-radius: 12px;
       overflow: hidden;
-      border: 1px solid #1e2030;
+      border: 1px solid #e6eef6;
+      box-shadow: 0 6px 18px rgba(31,45,62,0.06);
     }
 
     .header {
-      background: linear-gradient(135deg, #1a1b2e 0%, #0f1022 100%);
-      padding: 40px 40px 32px;
+      background: linear-gradient(180deg, #eef2ff 0%, #f9fafb 100%);
+      padding: 28px 28px 20px;
       text-align: center;
-      border-bottom: 1px solid #1e2030;
+      border-bottom: 1px solid #eef3fb;
       position: relative;
-    }
-
-    .header::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #6c63ff, #a78bfa, #60a5fa, #34d399);
     }
 
     .logo-ring {
@@ -60,75 +54,68 @@ const verifyEmailTemplate = ({ otp, title, userName = "there", appName = "Vybe",
       justify-content: center;
       width: 56px;
       height: 56px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #6c63ff, #a78bfa);
-      margin-bottom: 20px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #c7b3ff, #e6e6ff);
+      margin-bottom: 12px;
     }
 
     .app-name {
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 700;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: #a78bfa;
-      margin-bottom: 10px;
+      color: #6b46ff;
+      margin-bottom: 8px;
     }
 
     .header h1 {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
-      color: #f0f0ff;
-      line-height: 1.35;
+      color: #0f1724;
+      line-height: 1.25;
     }
 
     .body {
-      padding: 36px 40px;
+      padding: 28px 32px;
     }
 
     .greeting {
       font-size: 15px;
-      color: #8890a4;
-      line-height: 1.7;
-      margin-bottom: 32px;
+      color: #374151;
+      line-height: 1.6;
+      margin-bottom: 20px;
     }
 
     .greeting strong {
-      color: #d0d4e8;
-      font-weight: 600;
+      color: #111827;
+      font-weight: 700;
     }
 
     .otp-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.15em;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #6c63ff;
+      color: #6b46ff;
       margin-bottom: 12px;
     }
 
     .otp-box {
-      background: #0d0e14;
-      border: 1.5px solid #2a2d45;
-      border-radius: 14px;
-      padding: 24px;
+      background: #f8fbff;
+      border: 1px solid #e6eef6;
+      border-radius: 12px;
+      padding: 20px 18px;
       text-align: center;
-      margin-bottom: 32px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .otp-box::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at center top, rgba(108,99,255,0.08) 0%, transparent 70%);
-      pointer-events: none;
+      margin-bottom: 24px;
     }
 
     .otp-digits {
       display: inline-flex;
-      gap: 10px;
+      gap: 12px;
       justify-content: center;
+      align-items: center;
+      flex-wrap: nowrap;
+      margin-bottom: 8px;
     }
 
     .otp-digit {
@@ -136,102 +123,87 @@ const verifyEmailTemplate = ({ otp, title, userName = "there", appName = "Vybe",
       align-items: center;
       justify-content: center;
       width: 52px;
-      height: 60px;
-      background: #1a1b2e;
-      border: 1.5px solid #2a2d45;
-      border-radius: 10px;
-      font-family: 'Space Mono', monospace;
-      font-size: 28px;
+      height: 52px;
+      background: #ffffff;
+      border: 1px solid #e6eef6;
+      border-radius: 8px;
+      font-family: 'Space Mono', 'Courier New', monospace;
+      font-size: 20px;
       font-weight: 700;
-      color: #f0f0ff;
+      color: #0f1724;
+    }
+
+    .otp-sep {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 52px;
+      font-family: 'Space Mono', 'Courier New', monospace;
+      font-size: 18px;
+      color: #9ca3af;
     }
 
     .otp-expiry {
-      font-size: 12px;
-      color: #5a5e75;
-      margin-top: 12px;
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 6px;
     }
 
     .otp-expiry span {
-      color: #a78bfa;
-      font-weight: 600;
+      color: #6b46ff;
+      font-weight: 700;
     }
 
     .note {
-      background: rgba(108,99,255,0.06);
-      border-left: 3px solid #6c63ff;
-      border-radius: 0 10px 10px 0;
-      padding: 14px 16px;
-      margin-bottom: 32px;
+      background: #f1f5ff;
+      border-left: 3px solid #c7b3ff;
+      border-radius: 0 8px 8px 0;
+      padding: 12px 14px;
+      margin-bottom: 20px;
     }
 
     .note p {
       font-size: 13px;
-      color: #8890a4;
-      line-height: 1.65;
+      color: #374151;
+      line-height: 1.6;
     }
-
-    .note p strong { color: #d0d4e8; }
 
     .cta-text {
       font-size: 14px;
-      color: #8890a4;
-      line-height: 1.7;
-      margin-bottom: 28px;
+      color: #374151;
+      line-height: 1.6;
+      margin-bottom: 8px;
     }
 
     .divider {
       height: 1px;
-      background: #1e2030;
-      margin-bottom: 28px;
+      background: #eef3fb;
+      margin-bottom: 18px;
     }
 
     .footer {
-      padding: 0 40px 36px;
+      padding: 18px 28px 28px;
       text-align: center;
     }
 
     .footer p {
       font-size: 12px;
-      color: #3a3d55;
-      line-height: 1.8;
+      color: #6b7280;
+      line-height: 1.6;
     }
 
     .footer a {
-      color: #6c63ff;
+      color: #6b46ff;
       text-decoration: none;
-    }
-
-    .social-links {
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-    }
-
-    .social-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: #1a1b2e;
-      border: 1px solid #2a2d45;
-      text-decoration: none;
-    }
-
-    .social-link svg {
-      width: 15px;
-      height: 15px;
-      fill: #5a5e75;
     }
 
     @media (max-width: 480px) {
-      .header, .body { padding: 28px 24px; }
-      .footer { padding: 0 24px 28px; }
-      .otp-digit { width: 42px; height: 50px; font-size: 22px; }
-      .otp-digits { gap: 7px; }
+      .header, .body { padding: 20px 18px; }
+      .footer { padding: 14px 18px 20px; }
+      .otp-digit { width: 44px; height: 44px; font-size: 18px; }
+      .otp-digits { gap: 8px; }
+      .otp-sep { height: 44px; }
     }
   </style>
 </head>
@@ -262,11 +234,11 @@ const verifyEmailTemplate = ({ otp, title, userName = "there", appName = "Vybe",
 
         <p class="otp-label">Your one-time password</p>
         <div class="otp-box">
-          <div class="otp-digits">
+          <div class="otp-digits" role="presentation" aria-hidden="true">
             <div class="otp-digit">${d1}</div>
             <div class="otp-digit">${d2}</div>
             <div class="otp-digit">${d3}</div>
-            <div class="otp-digit" style="background:transparent;border-color:transparent;font-size:20px;color:#3a3d55;font-family:'Space Mono',monospace;">—</div>
+            <div class="otp-sep">—</div>
             <div class="otp-digit">${d4}</div>
             <div class="otp-digit">${d5}</div>
             <div class="otp-digit">${d6}</div>

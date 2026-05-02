@@ -29,3 +29,10 @@ export const signup = {
     //     return data.password === data.confirmPassword ;
     // },{error:"Passwords do not match",path:["confirmPassword"]})
 }
+
+export const confirmEmail = {
+    body:z.strictObject({
+        email:generalFields.email,
+        otp:generalFields.otp
+    })
+} 

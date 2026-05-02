@@ -36,6 +36,7 @@ exports.generalFields = {
     firstName: zod_1.default.string().min(2).max(25),
     lastName: zod_1.default.string().min(2).max(25),
     phoneNumber: zod_1.default.string().regex(/^\+?[1-9]\d{1,14}$/),
+    otp: zod_1.default.string().regex(/^\d{6}$/),
     gender: zod_1.default.preprocess((val) => {
         if (typeof val === "string")
             return val.trim().toLowerCase();

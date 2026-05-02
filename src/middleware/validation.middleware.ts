@@ -37,8 +37,9 @@ export const generalFields ={
     password:z.string().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,}$/),
     confirmPassword:z.string(),
     firstName:z.string().min(2).max(25),
-    lastName:z.string().min(2).max(25),
+    lastName:z.string().min(2).max(25), 
     phoneNumber:z.string().regex(/^\+?[1-9]\d{1,14}$/),
+    otp:z.string().regex(/^\d{6}$/),
     gender: z.preprocess((val)=>{
         if(typeof val === "string") return val.trim().toLowerCase();
         return val;
