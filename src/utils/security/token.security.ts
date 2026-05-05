@@ -1,10 +1,10 @@
 import {JwtPayload, Secret, sign, SignOptions, verify} from "jsonwebtoken"
 import { HUserDocument, RoleEnum, UserModel } from "../../db/models/user.model"
-import { UnauthorizedException } from "../response/error.responce"
+import { BadRequestException, UnauthorizedException } from "../response/error.responce"
 import { UserRepository } from "../../db/repository/user.repository"
 import {v4 as uuid} from "uuid"
 import { TokenRepository } from "../../db/repository/token.repository"
-import { TokenModel } from "../../db/models/token.model"
+import { HTokenDocument, TokenModel } from "../../db/models/token.model"
 
 export enum SignatureLevelEnum{
     Bearer = "Bearer",
@@ -101,19 +101,35 @@ export const decodeToken = async({authorization , tokenType = TokenTypeEnum.acce
             ? signatures.refresh_signature 
             : signatures.access_signature
     })
-if(!decoded?.userId || !decoded?.iat)
-    throw new UnauthorizedException("Invalid token data")
+    if(!decoded?.userId || !decoded?.iat)
+        throw new UnauthorizedException("Invalid token data")
 
-if(await tokenModel.findOne({filter:{jti:decoded.jti}}))
-    throw new UnauthorizedException("invalid or old Login Credentials")
+    if(await tokenModel.findOne({filter:{jti:decoded.jti}}))
+        throw new UnauthorizedException("invalid or old Login Credentials")
 
-const user = await userModel.findOne({ 
-    filter: {_id:decoded.userId}
-})
+    const user = await userModel.findOne({ 
+        filter: {_id:decoded.userId}
+    })
 
-if(!user) throw new UnauthorizedException("User not found")
+    if(!user) throw new UnauthorizedException("User not found")
 
-if((user.changeCredentialTime?.getTime() || 0) > decoded.iat * 1000) throw new UnauthorizedException("invalid or old Login Credentials")
+    if((user.changeCredentialTime?.getTime() || 0) > decoded.iat * 1000) throw new UnauthorizedException("invalid or old Login Credentials")
 
-return{user , decoded}
+    return{user , decoded}
+}
+
+export const createRevokeToken = async(decoded:JwtPayload):Promise<HTokenDocument>=>{
+    const tokenModel = new TokenRepository(TokenModel)
+   const [result] =  await tokenModel.create({
+        data:[{
+            jti:decoded?.jti as string,
+            expiersIn: (decoded?.iat as number)+ Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
+            userId:decoded?.userId
+        }]
+    } ) || [];
+
+    if(!result) throw new BadRequestException("Fail to revoke this Token")
+    
+    return result
+    
 }

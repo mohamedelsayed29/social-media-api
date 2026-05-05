@@ -1,14 +1,12 @@
 import { Response,NextFunction, Request } from "express";
 import { ILogoutDto } from "./user.dto";
-import { LogoutEnum } from "../../utils/security/token.security";
+import { createLoginCredentials, createRevokeToken, LogoutEnum } from "../../utils/security/token.security";
 import { UpdateQuery } from "mongoose";
-import { IUser, UserModel } from "../../db/models/user.model";
+import { HUserDocument, IUser, UserModel } from "../../db/models/user.model";
 import { UserRepository } from "../../db/repository/user.repository";
-import { TokenRepository } from "../../db/repository/token.repository";
-import { TokenModel } from "../../db/models/token.model";
+import { JwtPayload } from "jsonwebtoken";
 export class UserService {
     private _userModel = new UserRepository(UserModel) 
-    private _tokenModel  = new TokenRepository(TokenModel) 
     
     constructor(){}
 
@@ -25,13 +23,7 @@ export class UserService {
                 break;
         
             default:
-                await this._tokenModel.create({
-                    data:[{
-                        jti:req.decoded?.jti as string,
-                        expiersIn: (req.decoded?.iat as number)+ Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
-                        userId:req.decoded?.userId
-                    }]
-                })
+                await createRevokeToken(req.decoded as JwtPayload )
                 statusCode = 201;
                 break;
         }
@@ -40,6 +32,11 @@ export class UserService {
             update
         })
         return res.status(statusCode).json({message:"Done"})
+    }
+    refreshToken = async(req:Request,res:Response,next:NextFunction):Promise<Response> =>{
+        const credentials = await createLoginCredentials(req.user as HUserDocument)
+        await createRevokeToken(req.decoded as JwtPayload )
+        return res.status(201).json({message:"Done" , data:{credentials}} )
     }
 }
 
