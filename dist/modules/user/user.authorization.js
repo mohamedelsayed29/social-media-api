@@ -3,5 +3,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.endPoint = void 0;
 const user_model_1 = require("../../db/models/user.model");
 exports.endPoint = {
-    profile: [user_model_1.RoleEnum.user]
+    profile: [user_model_1.RoleEnum.user, user_model_1.RoleEnum.admin]
 };
