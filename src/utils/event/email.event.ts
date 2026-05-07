@@ -16,3 +16,14 @@ emailEventEmitter.on("confirmationEmail", async(data:IEmail)=>{
         console.error("Error sending confirmation email:", error);
     }
 }) ;
+//resetPassword
+
+emailEventEmitter.on("resetPassword", async(data:IEmail)=>{
+    try {
+        data.subject = "Reset-Account-Password";
+        data.html = verifyEmailTemplate({otp:data.otp,title:"Reset Password"})
+        await sendEmail(data);
+    } catch (error) {
+        console.error("Error sending confirmation email:", error); 
+    }
+}) ;

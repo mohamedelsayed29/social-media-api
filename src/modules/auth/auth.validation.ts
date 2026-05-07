@@ -42,3 +42,25 @@ export const signUpWithGmail = {
         idToken : z.string()  
     })
 }
+
+export const forgotPassword = {
+    body:z.strictObject({
+        email:generalFields.email,
+        
+    })
+}
+export const verfiyForgotPassword = {
+    body:forgotPassword.body.extend({
+        otp:generalFields.otp,
+    })
+}
+
+export const resetForgotPassword = {
+    body:z.strictObject({
+        email:generalFields.email,
+        password:generalFields.password,
+        confirmPassword:generalFields.confirmPassword
+    }).refine((data)=>{
+        return data.password === data.confirmPassword
+    },{message:"Password mismatch confirmPassword",path: ['confirmPassword']})
+}

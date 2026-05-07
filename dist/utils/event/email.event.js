@@ -18,3 +18,13 @@ exports.emailEventEmitter.on("confirmationEmail", async (data) => {
         console.error("Error sending confirmation email:", error);
     }
 });
+exports.emailEventEmitter.on("resetPassword", async (data) => {
+    try {
+        data.subject = "Reset-Account-Password";
+        data.html = (0, verify_template_email_1.verifyEmailTemplate)({ otp: data.otp, title: "Reset Password" });
+        await (0, send_email_1.sendEmail)(data);
+    }
+    catch (error) {
+        console.error("Error sending confirmation email:", error);
+    }
+});

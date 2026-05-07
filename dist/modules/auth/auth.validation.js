@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.signUpWithGmail = exports.confirmEmail = exports.signup = exports.login = void 0;
+exports.resetForgotPassword = exports.verfiyForgotPassword = exports.forgotPassword = exports.signUpWithGmail = exports.confirmEmail = exports.signup = exports.login = void 0;
 const zod_1 = __importDefault(require("zod"));
 const validation_middleware_1 = require("../../middleware/validation.middleware");
 exports.login = {
@@ -40,4 +40,23 @@ exports.signUpWithGmail = {
     body: zod_1.default.strictObject({
         idToken: zod_1.default.string()
     })
+};
+exports.forgotPassword = {
+    body: zod_1.default.strictObject({
+        email: validation_middleware_1.generalFields.email,
+    })
+};
+exports.verfiyForgotPassword = {
+    body: exports.forgotPassword.body.extend({
+        otp: validation_middleware_1.generalFields.otp,
+    })
+};
+exports.resetForgotPassword = {
+    body: zod_1.default.strictObject({
+        email: validation_middleware_1.generalFields.email,
+        password: validation_middleware_1.generalFields.password,
+        confirmPassword: validation_middleware_1.generalFields.confirmPassword
+    }).refine((data) => {
+        return data.password === data.confirmPassword;
+    }, { message: "Password mismatch confirmPassword", path: ['confirmPassword'] })
 };

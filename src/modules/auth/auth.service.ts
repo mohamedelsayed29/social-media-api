@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { IConfirmEmailDto, IGmailDto, ISignupDto } from "./auth.dto";
+import { IConfirmEmailDto, IForgotPasswordDto, IGmailDto, IResetForgotPasswordDto, ISignupDto, IVerfiyForgotPasswordDto } from "./auth.dto";
 import { ProviderEnum, UserModel } from "../../db/models/user.model";
 import { BadRequestException, ConflictException, NotFoundException } from "../../utils/response/error.responce";
 import { UserRepository } from "../../db/repository/user.repository";
@@ -89,6 +89,7 @@ class AuthenticationService{
         })
         return res.status(200).json({message:"Email confirmed"});
     }
+
     private async verfiyGmailAccount (idToken:string):Promise<TokenPayload>{
         const client = new OAuth2Client();
         const ticket = await client.verifyIdToken({
@@ -144,5 +145,64 @@ class AuthenticationService{
         const credentials = await createLoginCredentials(user)
         return res.status(200).json({ message: "Account Created Successfuly" , data:{credentials}})
     }
+
+    forgotPassword = async (req: Request, res: Response): Promise<Response> => {
+        const {email}:IForgotPasswordDto = req.body 
+        const user = await this._userModel.findOne({
+            filter:{email:email as string , provider:ProviderEnum.system , confirmedAt:{$exists:true} },
+        })
+        if(!user) throw new NotFoundException("Invalid Account")
+        const otp = generateNumberOtp();
+        const result = await this._userModel.updateOne({
+            filter:{email},
+            update:{
+                resetPasswordOtp:await generateHash(String(otp))
+            }
+        })
+        if(!result.matchedCount) throw new BadRequestException("Fail to Send the reset Code Please try again Later")
+        emailEventEmitter.emit("resetPassword",{to:email , otp})
+
+        return res.status(200).json({message:"Done"})
+    }
+
+    verfiyForgotPassword = async (req: Request, res: Response): Promise<Response> => {
+        const {email , otp }:IVerfiyForgotPasswordDto = req.body 
+        const user = await this._userModel.findOne({
+            filter:{
+                email:email as string ,
+                provider:ProviderEnum.system ,
+                resetPasswordOtp:{$exists:true }
+            },
+        })
+        if(!user) throw new NotFoundException("Invalid Account or missing reset password OTP")
+        if(!await compareHash(otp,user.resetPasswordOtp as string)) throw new ConflictException("Invalid OTP")
+        
+        return res.status(200).json({message:"Done"})
+    }
+
+    resetForgotPassword = async (req: Request, res: Response): Promise<Response> => {
+        const {email , password }:IResetForgotPasswordDto = req.body 
+        const user = await this._userModel.findOne({
+            filter:{
+                email:email as string ,
+                provider:ProviderEnum.system ,
+                resetPasswordOtp:{$exists:true }
+            },
+        })
+        if(!user) throw new NotFoundException("Invalid Account or missing reset password OTP")
+            
+        const result = await this._userModel.updateOne({
+            filter:{email},
+            update:{
+                $unset:{resetPasswordOtp:1},
+                changeCredentialTime: new Date(),
+                password: await generateHash(password)
+            }
+        })
+        if(!result.matchedCount) throw new BadRequestException("Fail to reset Account Password ")
+
+        return res.status(200).json({message:"Password Reset Successfully "})
+    }
+
 } 
 export default new AuthenticationService();
