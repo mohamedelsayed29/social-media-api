@@ -42,6 +42,8 @@ const validation_middleware_1 = require("../../middleware/validation.middleware"
 const validators = __importStar(require("./auth.validation"));
 const router = (0, express_1.Router)();
 router.post("/signup", (0, validation_middleware_1.validation)(validators.signup), auth_service_1.default.signup);
+router.post("/signup-gmail", (0, validation_middleware_1.validation)(validators.signUpWithGmail), auth_service_1.default.signupWithGmail);
+router.post("/login-gmail", (0, validation_middleware_1.validation)(validators.signUpWithGmail), auth_service_1.default.loginWithGmail);
 router.patch("/confirm-email", (0, validation_middleware_1.validation)(validators.confirmEmail), auth_service_1.default.confirmEmail);
 router.post("/login", (0, validation_middleware_1.validation)(validators.login), auth_service_1.default.login);
 exports.default = router;

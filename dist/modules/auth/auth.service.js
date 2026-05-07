@@ -7,6 +7,7 @@ const hash_security_1 = require("../../utils/security/hash.security");
 const email_event_1 = require("../../utils/event/email.event");
 const otp_1 = require("../../utils/otp");
 const token_security_1 = require("../../utils/security/token.security");
+const google_auth_library_1 = require("google-auth-library");
 class AuthenticationService {
     _userModel = new user_repository_1.UserRepository(user_model_1.UserModel);
     constructor() { }
@@ -38,7 +39,7 @@ class AuthenticationService {
     login = async (req, res) => {
         const { email, password } = req.body;
         const user = await this._userModel.findOne({
-            filter: { email },
+            filter: { email, provider: user_model_1.ProviderEnum.system },
         });
         if (!user)
             throw new error_responce_1.NotFoundException("User not found");
@@ -71,6 +72,56 @@ class AuthenticationService {
             }
         });
         return res.status(200).json({ message: "Email confirmed" });
+    };
+    async verfiyGmailAccount(idToken) {
+        const client = new google_auth_library_1.OAuth2Client();
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.WEB_CLIENT_IDS?.split(",") || [],
+        });
+        const payload = ticket.getPayload();
+        if (!payload?.email_verified)
+            throw new error_responce_1.BadRequestException("Fail to verify this google account");
+        return payload;
+    }
+    signupWithGmail = async (req, res) => {
+        const { idToken } = req.body;
+        const { email, family_name, given_name, name, picture } = await this.verfiyGmailAccount(idToken);
+        const user = await this._userModel.findOne({
+            filter: { email: email },
+        });
+        if (user) {
+            if (user.provider === user_model_1.ProviderEnum.google) {
+                return await this.loginWithGmail(req, res);
+            }
+            throw new error_responce_1.ConflictException(`Emain exist with another Provider ::: ${user.provider}`);
+        }
+        const [newUser] = await this._userModel.create({
+            data: [{
+                    email: email,
+                    firstName: given_name,
+                    lastName: family_name,
+                    username: name,
+                    profileImage: picture,
+                    provider: user_model_1.ProviderEnum.google,
+                    confirmedAt: new Date()
+                }]
+        }) || [];
+        if (!newUser)
+            throw new error_responce_1.BadRequestException("Fail to signup with gmail please try agin later");
+        const credentials = await (0, token_security_1.createLoginCredentials)(newUser);
+        return res.status(201).json({ message: "Account Created Successfuly", data: { credentials } });
+    };
+    loginWithGmail = async (req, res) => {
+        const { idToken } = req.body;
+        const { email } = await this.verfiyGmailAccount(idToken);
+        const user = await this._userModel.findOne({
+            filter: { email: email, provider: user_model_1.ProviderEnum.google },
+        });
+        if (!user)
+            throw new error_responce_1.NotFoundException(`Not Registered Account or Registered with another Provider`);
+        const credentials = await (0, token_security_1.createLoginCredentials)(user);
+        return res.status(200).json({ message: "Account Created Successfuly", data: { credentials } });
     };
 }
 exports.default = new AuthenticationService();

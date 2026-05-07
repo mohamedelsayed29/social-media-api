@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserModel = exports.RoleEnum = exports.GenderEnum = void 0;
+exports.UserModel = exports.ProviderEnum = exports.RoleEnum = exports.GenderEnum = void 0;
 const mongoose_1 = require("mongoose");
 var GenderEnum;
 (function (GenderEnum) {
@@ -12,6 +12,11 @@ var RoleEnum;
     RoleEnum["user"] = "user";
     RoleEnum["admin"] = "admin";
 })(RoleEnum || (exports.RoleEnum = RoleEnum = {}));
+var ProviderEnum;
+(function (ProviderEnum) {
+    ProviderEnum["google"] = "google";
+    ProviderEnum["system"] = "system";
+})(ProviderEnum || (exports.ProviderEnum = ProviderEnum = {}));
 const userSchema = new mongoose_1.Schema({
     firstName: { type: String, required: true, minLength: 2, maxLength: 25, trim: true },
     lastName: { type: String, required: true, minLength: 2, maxLength: 25, trim: true },
@@ -19,12 +24,20 @@ const userSchema = new mongoose_1.Schema({
     phoneNumber: { type: String, required: true },
     gender: { type: String, enum: GenderEnum },
     address: { type: String },
-    password: { type: String, required: true },
+    password: {
+        type: String,
+        required: function () {
+            return this.provider === ProviderEnum.google ? false : true;
+        }
+    },
+    profileImage: { type: String },
+    coverImage: [String],
     confirmEmailOtp: { type: String },
     confirmedAt: { type: Date },
     resetPasswordOtp: { type: String },
     changeCredentialTime: { type: Date },
     role: { type: String, enum: RoleEnum, default: RoleEnum.user },
+    provider: { type: String, enum: ProviderEnum, default: ProviderEnum.system }
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
