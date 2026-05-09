@@ -5,7 +5,8 @@ import { UpdateQuery } from "mongoose";
 import { HUserDocument, IUser, UserModel } from "../../db/models/user.model";
 import { UserRepository } from "../../db/repository/user.repository";
 import { JwtPayload } from "jsonwebtoken";
-import { uploadfile } from "../../utils/multer/s3.config";
+import { uploadfile, uploadFiles } from "../../utils/multer/s3.config";
+import { StorageEnum } from "../../utils/multer/cloud.multer";
 export class UserService {
     private _userModel = new UserRepository(UserModel) 
     
@@ -18,9 +19,19 @@ export class UserService {
     profileImage = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
         const key = await uploadfile({
             file:req.file as Express.Multer.File,
-            Path:`users/${req.decoded?.userId}`
+            Path:`users/${req.decoded?.userId}/profile-image`,
         })
-        return res.json({message:"Done",data:{key}})
+        return res.json({message:"Profile Image Uploaded Successfully",data:{key}})
+    }
+
+    profileCoverImage = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
+        const urls:string[] = await uploadFiles({
+            storageApproach:StorageEnum.disk,
+            files:req.files as Express.Multer.File[],
+            Path:`users/${req.decoded?.userId}/cover-images`
+        })
+
+        return res.json({message:"Profile Cover Image Uploaded Successfully",data:{urls}})
     }
 
     logout = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
