@@ -5,6 +5,7 @@ import { UpdateQuery } from "mongoose";
 import { HUserDocument, IUser, UserModel } from "../../db/models/user.model";
 import { UserRepository } from "../../db/repository/user.repository";
 import { JwtPayload } from "jsonwebtoken";
+import { uploadfile } from "../../utils/multer/s3.config";
 export class UserService {
     private _userModel = new UserRepository(UserModel) 
     
@@ -13,6 +14,15 @@ export class UserService {
     profile = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
         return res.json({message:"Done",data:{user:req.user,decoded:req.decoded}})
     }
+
+    profileImage = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
+        const key = await uploadfile({
+            file:req.file as Express.Multer.File,
+            Path:`users/${req.decoded?.userId}`
+        })
+        return res.json({message:"Done",data:{key}})
+    }
+
     logout = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
         const {flag}:ILogoutDto = req.body
         const update:UpdateQuery<IUser> = {}
@@ -33,6 +43,7 @@ export class UserService {
         })
         return res.status(statusCode).json({message:"Done"})
     }
+
     refreshToken = async(req:Request,res:Response,next:NextFunction):Promise<Response> =>{
         const credentials = await createLoginCredentials(req.user as HUserDocument)
         await createRevokeToken(req.decoded as JwtPayload )
