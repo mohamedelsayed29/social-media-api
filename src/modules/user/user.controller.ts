@@ -12,7 +12,7 @@ router.get("/profile",authorizationMiddleware(endPoint.profile),userService.prof
 
 router.patch("/profile-image",
     authenticationMiddleware(),
-    cloudFileUpload({validation:fileValidation.images,storageApproach:StorageEnum.disk}).single("image"),
+    // cloudFileUpload({validation:fileValidation.images,storageApproach:StorageEnum.disk}).single("image"),
     userService.profileImage 
 );
 

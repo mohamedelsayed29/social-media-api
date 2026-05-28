@@ -4,6 +4,7 @@ import { StorageEnum } from "./cloud.multer"
 import { createReadStream } from "node:fs"
 import { BadRequestException } from "../response/error.responce"
 import { Upload } from "@aws-sdk/lib-storage"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 export const s3Config = () => {
     return new S3Client({
@@ -48,7 +49,7 @@ export const uploadLargeFile = async ({
     ACL = "private",
     Path = "general",
     file,
-    storageApproach = StorageEnum.memory
+    storageApproach = StorageEnum.disk
 }: {
     Bucket?: string,
     ACL?: ObjectCannedACL,
@@ -84,6 +85,7 @@ export const uploadFiles = async ({
     ACL = "private",
     Path = "general",
     files,
+    useLarge = false,
     storageApproach = StorageEnum.memory
 
 }: {
@@ -92,14 +94,48 @@ export const uploadFiles = async ({
     Path?: string,
     files: Express.Multer.File[],
     storageApproach?: StorageEnum
+    useLarge?:boolean
 }): Promise<string[]> => {
 
     let urls: string[] = []
-
-    urls = await Promise.all(
-        files.map(async (file) => {
-            return await uploadfile({Bucket,ACL,Path,file})
-        })
-    )
+    if(useLarge){
+        urls = await Promise.all(
+            files.map(async (file) => {
+                return await uploadLargeFile({Bucket,ACL,Path,file})
+            })
+        )
+    }else{
+        urls = await Promise.all(
+            files.map(async (file) => {
+                return await uploadfile({Bucket,ACL,Path,file})
+            })
+        )
+    }
     return urls
+}
+
+export const createPresignedUrl = async({
+    Bucket = process.env.AWS_BUCKET_NAME as string,
+    Path = "general",
+    expiresIn = 120,
+    contentType,
+    originalname
+}:{
+    Bucket?:string,
+    Path?:string,
+    contentType:string
+    originalname:string
+    expiresIn?:number
+}):Promise<{url:string,key:string}>=>{
+    const command = new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME as string,
+        ACL:"private",
+        Key: `${process.env.APPLICATION_NAME}/${Path}/${uuid()}_${originalname}`,
+        ContentType:"application/octet-stream"
+    })
+    const url = await getSignedUrl(s3Config(),command,{expiresIn})
+    if(!url || !command?.input?.Key){
+        throw new BadRequestException("fail to generate presigned url")
+    }
+    return {url,key:command.input.Key as string}
 }
