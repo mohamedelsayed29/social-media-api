@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid"
-import { ObjectCannedACL, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { DeleteObjectCommand, DeleteObjectCommandOutput, DeleteObjectsCommand, GetObjectCommand, GetObjectCommandOutput, ListObjectsV2Command, ObjectCannedACL, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { StorageEnum } from "./cloud.multer"
 import { createReadStream } from "node:fs"
 import { BadRequestException } from "../response/error.responce"
@@ -138,4 +138,94 @@ export const createPresignedUrl = async({
         throw new BadRequestException("fail to generate presigned url")
     }
     return {url,key:command.input.Key as string}
+}
+
+export const createGetPresignedUrl = async({
+    Bucket = process.env.AWS_BUCKET_NAME as string,
+    key,
+    downloadName="dummy",
+    download = false,
+    expiresIn = 120,
+
+}:{
+    Bucket?:string,
+    key:string,
+    downloadName?:string,
+    download?:boolean,
+    expiresIn?:number
+})=>{
+    const command = new GetObjectCommand({
+        Bucket,
+        Key:key,
+        ResponseContentDisposition: download === true ? `attachment; filename="${downloadName}"`: undefined
+    })
+    const url = await getSignedUrl(s3Config(),command,{expiresIn})
+    if(!url){
+        throw new BadRequestException("fail to generate presigned url")
+    }
+    return url
+}
+
+export const getFile = async({
+    Bucket = process.env.AWS_BUCKET_NAME as string,
+    key
+}:{
+    Bucket?:string,
+    key:string
+}):Promise<GetObjectCommandOutput>=>{
+    const command = new GetObjectCommand({Bucket,Key:key})
+
+    return await s3Config().send(command)
+
+}
+
+export const deleteFile = async({
+    Bucket = process.env.AWS_BUCKET_NAME as string,
+    key
+}:{
+    Bucket?:string,
+    key:string
+}):Promise<DeleteObjectCommandOutput>=>{
+    const command = new DeleteObjectCommand({Bucket,Key:key})
+
+    return await s3Config().send(command)
+
+}
+
+export const deleteFiles = async({
+    Bucket = process.env.AWS_BUCKET_NAME as string,
+    urls,
+    Quiet = false
+}:{
+    Bucket?:string,
+    urls:string[],
+    Quiet?:boolean
+}):Promise<DeleteObjectCommandOutput>=>{
+    const Objects = urls.map((url) => {
+        return {Key:url}
+    })
+    const command = new DeleteObjectsCommand({Bucket,Delete:{Objects, Quiet}})
+
+    return await s3Config().send(command)
+
+}
+
+export const listDirectory = async({Bucket=process.env.AWS_BUCKET_NAME as string,path}:{Bucket?:string,path:string})=>{
+    const command = new ListObjectsV2Command({
+        Bucket,
+        Prefix: `${process.env.APPLICATION_NAME}/${path}`
+    })
+
+    return await s3Config().send(command)
+}
+
+export const deleteFolderByPrefix = async({Bucket=process.env.AWS_BUCKET_NAME as string,path,Quiet=false}:{Bucket?:string,path:string,Quiet?:boolean}):Promise<DeleteObjectCommandOutput>=>{
+    const fileList = await listDirectory({Bucket,path})
+    if(!fileList?.Contents?.length){
+        throw new BadRequestException("Directory is empty or not found")
+    }
+    const urls:string[] = fileList.Contents.map((file) => {
+        return file.Key as string
+    })
+    return await deleteFiles({urls,Bucket,Quiet})
 }
