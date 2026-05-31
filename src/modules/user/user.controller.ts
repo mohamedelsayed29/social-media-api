@@ -22,6 +22,13 @@ router.patch("/profile-cover-image",
     userService.profileCoverImage 
 );
 
+router.delete("{/:userId}/freeze-account",authenticationMiddleware(),validation(validators.freezeAccount),userService.freezeAccount);
+
+router.delete("/:userId/hard-delete-account",authorizationMiddleware(endPoint.hardDeleteAccount),validation(validators.hardDeleteAccount),userService.hardDeleteAccount);
+
+
+router.patch("{/:userId}/restore-account",authorizationMiddleware(endPoint.restoreAccount),validation(validators.restoreAccount),userService.restoreAccount);
+
 
 router.post("/logout",authenticationMiddleware(),validation(validators.logout), userService.logout);
 

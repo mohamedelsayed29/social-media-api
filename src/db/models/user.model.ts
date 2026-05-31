@@ -24,11 +24,16 @@ export interface IUser{
     gender?:GenderEnum
     address?:string; 
     password:string;
-    confirmEmailOtp?:string;
+    confirmEmailOtp?:string; 
     confirmedAt?:Date;
     resetPasswordOtp?:string;
     changeCredentialTime?:Date;
     profileImage?:string
+    tempProfileImage?:string
+    freezeedAt?:Date;
+    freezeedBy?:Types.ObjectId;
+    restoredAt?:Date;
+    restoredBy?:Types.ObjectId;
     coverImage?:string[]
     role:RoleEnum; 
     provider:ProviderEnum;
@@ -51,9 +56,14 @@ const userSchema = new Schema<IUser>(
             }
         },
         profileImage:{type:String},
+        tempProfileImage:{type:String},
         coverImage:[String],
         confirmEmailOtp:{type:String},
         confirmedAt:{type:Date},
+        freezeedAt:{type:Date},
+        freezeedBy:{type:Types.ObjectId, ref:"User"},
+        restoredAt:{type:Date},
+        restoredBy:{type:Types.ObjectId, ref:"User"},
         resetPasswordOtp:{type:String},
         changeCredentialTime:{type:Date},
         role:{type:String, enum:RoleEnum, default:RoleEnum.user},

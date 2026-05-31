@@ -117,7 +117,7 @@ export const uploadFiles = async ({
 export const createPresignedUrl = async({
     Bucket = process.env.AWS_BUCKET_NAME as string,
     Path = "general",
-    expiresIn = 120,
+    expiresIn = Number(process.env.AWS_PRESIGNED_URL_EXPIRES_IN_SECONDS),
     contentType,
     originalname
 }:{
@@ -145,8 +145,7 @@ export const createGetPresignedUrl = async({
     key,
     downloadName="dummy",
     download = false,
-    expiresIn = 120,
-
+    expiresIn = Number(process.env.AWS_PRESIGNED_URL_EXPIRES_IN_SECONDS)
 }:{
     Bucket?:string,
     key:string,

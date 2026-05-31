@@ -24,6 +24,15 @@ export abstract class DatabaseRepository<TDocument> {
         return await this.model.updateOne(filter, { ...update, $inc: { __v: 1 } }, options || {})
     }
 
+    async deleteOne({ filter }: { filter: RootFilterQuery<TDocument>}): Promise<DeleteResult> {
+        return await this.model.deleteOne(filter)
+    }
+
+
+    async findByIdAndUpdate({ id, update, options }: { id: string, update: UpdateQuery<TDocument>, options?: QueryOptions<TDocument> | null | undefined }): Promise<HydratedDocument<TDocument> |Lean<TDocument> | null> {
+        return await this.model.findByIdAndUpdate(id, { ...update, $inc: { __v: 1 } }, options || { new: true })
+    }
+
     async findById({ id, select, options }: { id: string, select?: ProjectionType<TDocument> | null | undefined, options?: QueryOptions<TDocument> | null | undefined }): Promise<Lean<TDocument> | HydratedDocument<TDocument> | null> {
         const doc = this.model.findById(id).select(select || "");
         if (options?.populate) doc.populate(options.populate as PopulateOptions[]);

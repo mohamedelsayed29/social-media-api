@@ -84,6 +84,10 @@ const bootstrap = async ():Promise<void>=>{
     })
     // list directory
     app.get('/list-directory/*path',async (req:Request,res:Response)=>{
+        const {path} = req.params as unknown as {path:string[]}
+        const key = path.join('/')
+        return res.status(200).json({message: "List directory route hit", data:{key}})
+    })
 
     app.listen(port,()=>{
         console.log(`server is running on port ${port}`);
@@ -93,4 +97,4 @@ const bootstrap = async ():Promise<void>=>{
 
     await connectDB()
 }
-export default bootstrap;  
+export default bootstrap;
