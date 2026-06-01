@@ -9,13 +9,20 @@ import { createPresignedUrl, deleteFiles, deleteFolderByPrefix, uploadFiles } fr
 import { StorageEnum } from "../../utils/multer/cloud.multer";
 import { BadRequestException, ForbiddenException } from "../../utils/response/error.responce";
 import { s3EventEmitter } from "../../utils/multer/s3.event";
+import { successResponse } from "../../utils/response/success.response";
+import { IProfileResponse,ICoverImageResponse } from "./user.entities";
+import { ILoginResponse } from "../auth/auth.entities";
 export class UserService {
     private _userModel = new UserRepository(UserModel) 
     
     constructor(){}
 
     profile = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
-        return res.json({message:"Done",data:{user:req.user,decoded:req.decoded}})
+        if(!req.user) throw new BadRequestException("User not found")
+        return successResponse({
+            res,
+            data:{user:req.user,decoded:req.decoded}
+        })
     }
 
     profileImage = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
@@ -38,7 +45,11 @@ export class UserService {
 
         s3EventEmitter.emit("trackProfileImageUpload",{userId:req.decoded?.userId,oldImage:user.profileImage,newImage:key ,expiresIn:30000})
         
-        return res.json({message:"Profile Image Uploaded Successfully",data:{url,key}})
+        return successResponse <IProfileResponse>({
+            res,
+            message:"Profile Image Upload Initiated Successfully",
+            data:{url}
+        })
     }
 
     profileCoverImage = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
@@ -58,7 +69,11 @@ export class UserService {
             await deleteFiles({urls:req.user.coverImage})
         }
 
-        return res.json({message:"Profile Cover Image Uploaded Successfully",data:{urls}})
+        return successResponse<ICoverImageResponse>({
+            res,
+            message:"Profile Cover Image Uploaded Successfully",
+            data:{user}
+        })
     }
 
     freezeAccount = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
@@ -81,7 +96,10 @@ export class UserService {
             }
         })
         if(!user.matchedCount) throw new BadRequestException("Account is already frozen or does not exist")
-        return res.json({message:"Done"})
+        return successResponse({
+            res,
+            message:"Account Frozen Successfully"
+        })
     }
 
     restoreAccount = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
@@ -104,7 +122,10 @@ export class UserService {
             }
         })
         if(!user.matchedCount) throw new BadRequestException("Account is already restored or does not exist")
-        return res.json({message:"Done"})
+        return successResponse({
+            res,
+            message:"Account Restored Successfully"
+        })
     }
     
     hardDeleteAccount = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
@@ -121,7 +142,10 @@ export class UserService {
 
         await deleteFolderByPrefix({path:`users/${userId}`})
 
-        return res.json({message:"Done"})
+        return successResponse({
+            res,
+            message:"Account Deleted Successfully"
+        })
     }
 
     logout = async(req:Request,res:Response,next:NextFunction):Promise<Response> => {
@@ -148,7 +172,12 @@ export class UserService {
     refreshToken = async(req:Request,res:Response,next:NextFunction):Promise<Response> =>{
         const credentials = await createLoginCredentials(req.user as HUserDocument)
         await createRevokeToken(req.decoded as JwtPayload )
-        return res.status(201).json({message:"Done" , data:{credentials}} )
+        return successResponse<ILoginResponse >({
+            res,
+            statusCode:201,
+            message:"Token Refreshed Successfully",
+            data:{credentials}
+        })
     }
 }
 
