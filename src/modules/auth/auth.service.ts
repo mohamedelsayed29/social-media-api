@@ -40,9 +40,9 @@ class AuthenticationService{
                     firstName,
                     lastName,
                     email,
-                    password : await generateHash(password),
+                    password,
                     phoneNumber,
-                    confirmEmailOtp: await generateHash(String(otp))
+                    confirmEmailOtp: `${otp}`
                 }],
                 options:{validateBeforeSave:true}
             }

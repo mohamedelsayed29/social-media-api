@@ -104,7 +104,7 @@ export const decodeToken = async({authorization , tokenType = TokenTypeEnum.acce
     if(!decoded?.userId || !decoded?.iat)
         throw new UnauthorizedException("Invalid token data")
 
-    if(await tokenModel.findOne({filter:{jti:decoded.jti}}))
+    if(await tokenModel.findOne({filter:{jti:decoded.jti as string}}))
         throw new UnauthorizedException("invalid or old Login Credentials")
 
     const user = await userModel.findOne({ 

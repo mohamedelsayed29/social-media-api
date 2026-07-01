@@ -86,7 +86,7 @@ export const uploadFiles = async ({
     Path = "general",
     files,
     useLarge = false,
-    storageApproach = StorageEnum.memory
+    storageApproach = StorageEnum.disk
 
 }: {
     Bucket?: string,

@@ -3,6 +3,7 @@ import { ZodType } from "zod"
 import { BadRequestException } from "../utils/response/error.responce"
 import { ZodError } from "zod"
 import z from "zod"
+import { Types } from "mongoose"
 
 type KeyReqType = keyof Request
 type SchemaType = Partial<Record<KeyReqType, ZodType >>
@@ -14,6 +15,12 @@ export const validation = (schema: SchemaType)=>{
 
         for(const key of Object.keys(schema) as KeyReqType[]){
             if(!schema[key]) continue;
+            if(req.file){
+                req.body.attachments = req.file;
+            }
+            if(req.files){                
+                req.body.attachments = req.files;
+            }
             const validationResult = schema[key].safeParse(req[key]);   
 
             if(!validationResult?.success){
@@ -43,5 +50,23 @@ export const generalFields ={
     gender: z.preprocess((val)=>{
         if(typeof val === "string") return val.trim().toLowerCase();
         return val;
-    }, z.enum(["male", "female", "other"]).optional())
-}
+    }, z.enum(["male", "female", "other"]).optional()),
+    file: function(mimetype:string[]){
+        return z.strictObject({
+                fieldname: z.string(),
+                originalname: z.string(),
+                encoding: z.string(),
+                mimetype: z.string(),
+                buffer: z.any().optional(),
+                path:z.string().optional(),
+                size:z.number(),
+                destination: z.string().optional(),
+        filename: z.string().optional(),
+            }).refine((data)=>{
+                return data.path || data.buffer
+        },{error:"Please Provide a file"})
+    },
+    id:z.string().refine((data)=>{
+        return Types.ObjectId.isValid(data)
+    },{error:"Invalid Tag id"})
+} 

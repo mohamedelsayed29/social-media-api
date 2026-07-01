@@ -1,4 +1,7 @@
 import { Types , Schema, model, models, HydratedDocument } from "mongoose";
+import { generateHash } from "../../utils/security/hash.security";
+import { emailEventEmitter } from "../../utils/event/email.event";
+
 
 export enum GenderEnum{
     male = "male",
@@ -24,6 +27,7 @@ export interface IUser{
     gender?:GenderEnum
     address?:string; 
     password:string;
+    slug?:string;
     confirmEmailOtp?:string; 
     confirmedAt?:Date;
     resetPasswordOtp?:string;
@@ -45,7 +49,8 @@ const userSchema = new Schema<IUser>(
     {
         firstName:{type:String , required:true , minLength:2 , maxLength:25 , trim:true},
         lastName:{type:String , required:true , minLength:2 , maxLength:25 , trim:true},
-        email:{type:String , required:true , trim:true , unique:true}, 
+        slug:{type:String , required:true , minLength:2 , maxLength:51},
+        email:{type:String , required:true , trim:true , unique:true }, 
         phoneNumber:{type:String , required:true},
         gender:{type:String, enum:GenderEnum},
         address:{type:String}, 
@@ -77,11 +82,32 @@ const userSchema = new Schema<IUser>(
     }
 );
 
-userSchema.virtual("username").set(function(value:string){
+userSchema.virtual("username").set(function(value:string){ 
     const [firstName , lastName] = value.split(" ") || [];
-    this.set({firstName,lastName});
+    this.set({firstName,lastName ,slug:value.replaceAll(/\s+/g,"-")});
 }).get(function(){
     return this.firstName + " " + this.lastName;
+})
+
+userSchema.pre("save",async function(this:HUserDocument & {wasNew:boolean ; confirmEmailPlainOtp?:string},next){
+    this.wasNew = this.isNew
+    if(this.isModified("password")){
+        this.password = await generateHash(this.password)
+    }
+    if(this.isModified("confirmEmailOtp")){
+        this.confirmEmailPlainOtp = this.confirmEmailOtp as string
+        this.confirmEmailOtp = await generateHash(this.confirmEmailOtp as string)
+    }
+}); 
+userSchema.post("save", async function(doc,next){
+    const that = this as HUserDocument & {wasNew:boolean ; confirmEmailPlainOtp?:string}
+    if(that.wasNew && that.confirmEmailPlainOtp){
+        emailEventEmitter.emit("confirmationEmail",{
+            to:this.email,
+            username:this.username,
+            otp:that.confirmEmailOtp
+        })        
+    }
 })
 
 export const UserModel = models.User || model<IUser>("User",userSchema)

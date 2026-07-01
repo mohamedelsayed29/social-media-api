@@ -1,12 +1,11 @@
 import express from 'express'
-import type {Express, Request, Response} from 'express'
+import type {Express, Request, Response} from 'express' 
 import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import {resolve} from 'node:path'
 import { config } from 'dotenv'
-import authRouter from'./modules/auth/auth.controller'
-import userRouter from './modules/user/user.controller'
+import * as controller from './modules/controller.index'
 import { globalErrorHandler, NotFoundException } from './utils/response/error.responce'
 import connectDB from './db/connection.db'
 import { createGetPresignedUrl, deleteFile, deleteFiles, getFile } from './utils/multer/s3.config'
@@ -35,8 +34,9 @@ const bootstrap = async ():Promise<void>=>{
     app.get('/',(req : Request , res:Response)=>{
         res.json({message:"Welcome to the Social App"})
     }) 
-    app.use("/api/auth", authRouter)
-    app.use("/api/users", userRouter)
+    app.use("/api/auth", controller.authController)
+    app.use("/api/users", controller.userController)
+    app.use("/api/post", controller.postController)
     app.all('{/*dummy}',(req:Request,res:Response)=>{
         throw new NotFoundException("Route not found")
     })
@@ -94,6 +94,7 @@ const bootstrap = async ():Promise<void>=>{
     })
 
     app.use(globalErrorHandler)
+
 
     await connectDB()
 }
