@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { IConfirmEmailDto, IForgotPasswordDto, IGmailDto, IResetForgotPasswordDto, ISignupDto, IVerfiyForgotPasswordDto } from "./auth.dto";
-import { ProviderEnum, UserModel } from "../../db/models/user.model";
+import { UserModel } from "../../db/models/user.model";
 import { BadRequestException, ConflictException, NotFoundException } from "../../utils/response/error.responce";
 import { UserRepository } from "../../db/repository/user.repository";
 import { compareHash, generateHash } from "../../utils/security/hash.security";
@@ -10,6 +10,7 @@ import { createLoginCredentials } from "../../utils/security/token.security";
 import { OAuth2Client, type TokenPayload } from 'google-auth-library' ;
 import { successResponse } from "../../utils/response/success.response";
 import { ILoginResponse } from "./auth.entities";
+import { ProviderEnum } from "../../common";
 
 
 class AuthenticationService{

@@ -1,5 +1,5 @@
 import { DatabaseRepository } from "./database.repository";
-import {IToken as TDocument} from "../models/token.model"
+import {IToken as TDocument} from "../../common/interface/token.interface"
 import { Model } from "mongoose";
 
 

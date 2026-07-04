@@ -1,5 +1,5 @@
 import { CreateOptions, HydratedDocument, Model } from "mongoose";
-import { IUser as TDocument  } from "../models/user.model";
+import { IUser as TDocument  } from "../../common/interface/user.interface";
 import { DatabaseRepository } from "./database.repository";
 import { BadRequestException } from "../../utils/response/error.responce";
 

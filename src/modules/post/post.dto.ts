@@ -1,5 +1,7 @@
 import { Types } from "mongoose";
-import { AllowCommentsEnum, AvailabilityEnum } from "../../db/models/post.model";
+import z from "zod";
+import { likePostSchema } from "./post.validation";
+import { AllowCommentsEnum, AvailabilityEnum } from "../../common/enums/post.enum";
 
 export interface ICreatePostDto {
   content?: string;
@@ -8,3 +10,5 @@ export interface ICreatePostDto {
   availability?: AvailabilityEnum;
   tags?: Types.ObjectId[];
 }
+
+export type likePostQueryInputsDto = z.infer<typeof likePostSchema.query>

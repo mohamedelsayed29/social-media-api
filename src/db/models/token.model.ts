@@ -1,12 +1,6 @@
-import { HydratedDocument, model, models, Schema, Types } from "mongoose";
+import { HydratedDocument, model, models, Schema } from "mongoose";
+import { IToken } from "../../common/interface/token.interface";
 
-
-export interface IToken{
-    jti:string,
-    expiersIn:number,
-    userId:Types.ObjectId
-
-}
 
 const tokenSchema = new Schema<IToken>({
 

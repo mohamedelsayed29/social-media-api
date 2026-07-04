@@ -1,30 +1,7 @@
-import { HydratedDocument, model, models, Schema, Types } from "mongoose";
-export enum AllowCommentsEnum{
-    allow = "allow",
-    disallow = "disallow"
-}
-export enum AvailabilityEnum{
-    public = "PUBLIC",
-    friends = "FRIENDS",
-    onlyMe = "ONLY_ME"
-}
+import { HydratedDocument, model, models, Schema } from "mongoose";
+import { AllowCommentsEnum, AvailabilityEnum } from "../../common/enums/post.enum";
+import { IPost } from "../../common";
 
-export interface IPost{
-    content?:string,
-    attachments?:string[],
-    assetPostFolderId:string,
-    allowComments?:AllowCommentsEnum,
-    availability?:AvailabilityEnum,
-    tags?:Types.ObjectId[],
-    likes?:Types.ObjectId[],
-    freezeedBy?:Types.ObjectId,
-    freezeedAt?:Date,
-    restoredBy?:Types.ObjectId,
-    restoredAt?:Date, 
-    createdBy:Types.ObjectId,
-    updatedAt?:Date,
-    createdAt:Date
-}
 
 const postSchema = new Schema<IPost>({
     content:{type:String , minLength:2 , maxLength:50000 , required:function(this:IPost){
@@ -41,7 +18,18 @@ const postSchema = new Schema<IPost>({
     restoredBy:{type:Schema.Types.ObjectId , ref:"User"},
     restoredAt:{type:Date},
     createdBy:{type:Schema.Types.ObjectId , ref:"User" , required:true}
-},{timestamps:true})
+},{timestamps:true , strictQuery:true})
+
+
+postSchema.pre(["findOneAndUpdate","updateOne"],async function(next){
+    const query = this.getQuery();
+    if(query.paranoid === false){
+        this.setQuery({...query})
+    }else{
+        this.setQuery({...query,freezedAt:{$exists:false}})
+    }
+})
+
 
 export const PostModel = models.Post || model<IPost>("Post" , postSchema)
 export type HPostDocument = HydratedDocument<IPost>

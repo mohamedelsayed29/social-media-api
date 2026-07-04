@@ -1,4 +1,4 @@
-import { RoleEnum } from "../../db/models/user.model";
+import { RoleEnum } from "../../common";
 
 export const endPoint ={
     profile:[RoleEnum.user,RoleEnum.admin],

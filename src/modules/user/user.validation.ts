@@ -1,6 +1,6 @@
  import {z} from 'zod'
-import { LogoutEnum } from '../../utils/security/token.security'
 import { Types } from 'mongoose'
+import { LogoutEnum } from '../../common'
 
 export const logout = {
     body:z.strictObject({

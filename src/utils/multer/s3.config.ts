@@ -1,10 +1,10 @@
 import { v4 as uuid } from "uuid"
 import { DeleteObjectCommand, DeleteObjectCommandOutput, DeleteObjectsCommand, GetObjectCommand, GetObjectCommandOutput, ListObjectsV2Command, ObjectCannedACL, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
-import { StorageEnum } from "./cloud.multer"
 import { createReadStream } from "node:fs"
 import { BadRequestException } from "../response/error.responce"
 import { Upload } from "@aws-sdk/lib-storage"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { StorageEnum } from "../../common"
 
 export const s3Config = () => {
     return new S3Client({

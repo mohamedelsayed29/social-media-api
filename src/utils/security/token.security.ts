@@ -1,25 +1,12 @@
 import {JwtPayload, Secret, sign, SignOptions, verify} from "jsonwebtoken"
-import { HUserDocument, RoleEnum, UserModel } from "../../db/models/user.model"
+import { HUserDocument,UserModel } from "../../db/models/user.model"
 import { BadRequestException, UnauthorizedException } from "../response/error.responce"
 import { UserRepository } from "../../db/repository/user.repository"
 import {v4 as uuid} from "uuid"
 import { TokenRepository } from "../../db/repository/token.repository"
 import { HTokenDocument, TokenModel } from "../../db/models/token.model"
+import { RoleEnum, SignatureLevelEnum, TokenTypeEnum } from "../../common"
 
-export enum SignatureLevelEnum{
-    Bearer = "Bearer",
-    System = "System"
-}
-
-export enum TokenTypeEnum{
-    access = "access",
-    refresh = "refresh"
-}
-
-export enum LogoutEnum{
-    only = "only",
-    all = "all"
-}
 
 export const generateToken = async({
     payload,

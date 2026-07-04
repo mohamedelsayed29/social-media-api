@@ -2,11 +2,8 @@ import multer, { FileFilterCallback } from "multer";
 import {v4 as uuid} from 'uuid'
 import { Request } from "express";
 import { BadRequestException } from "../response/error.responce";
+import { StorageEnum } from "../../common";
 
-export enum StorageEnum {
-    memory = "memory",
-    disk = "disk"
-}
 
 export const fileValidation = {
     images:['image/jpeg','image/png','image/jpg'],

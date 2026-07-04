@@ -1,8 +1,9 @@
 import z from "zod"
-import { AllowCommentsEnum, AvailabilityEnum } from "../../db/models/post.model"
 import { generalFields } from "../../middleware/validation.middleware"
 import { fileValidation } from "../../utils/multer/cloud.multer"
-export const createPost = {
+import { AllowCommentsEnum, AvailabilityEnum, likeActionEnum } from "../../common/enums/post.enum"
+
+export const createPostSchema = {
     body:z.strictObject({
         content:z.string().min(2).max(50000).optional(),
         attachments:z.array(generalFields.file(fileValidation.images )).max(3).optional(),
@@ -24,5 +25,14 @@ export const createPost = {
                 message:"Please Provide Unique tags"
             })
         }
+    })
+}
+
+export const likePostSchema = {
+    params:z.strictObject({
+        postId:generalFields.id
+    }),
+    query:z.strictObject({
+        action:z.enum(likeActionEnum).default(likeActionEnum.like)
     })
 }

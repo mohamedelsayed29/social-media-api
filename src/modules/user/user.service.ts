@@ -1,17 +1,18 @@
 import { Response,NextFunction, Request } from "express";
 import { IFreezeAccountParams, IHardDeleteAccountParams, ILogoutDto, IRestoreAccountParams } from "./user.dto";
-import { createLoginCredentials, createRevokeToken, LogoutEnum } from "../../utils/security/token.security";
+import { createLoginCredentials, createRevokeToken } from "../../utils/security/token.security";
 import { UpdateQuery } from "mongoose";
-import { HUserDocument, IUser, RoleEnum, UserModel } from "../../db/models/user.model";
+import { HUserDocument, UserModel } from "../../db/models/user.model";
 import { UserRepository } from "../../db/repository/user.repository";
 import { JwtPayload } from "jsonwebtoken";
 import { createPresignedUrl, deleteFiles, deleteFolderByPrefix, uploadFiles } from "../../utils/multer/s3.config";
-import { StorageEnum } from "../../utils/multer/cloud.multer";
 import { BadRequestException, ForbiddenException } from "../../utils/response/error.responce";
 import { s3EventEmitter } from "../../utils/multer/s3.event";
 import { successResponse } from "../../utils/response/success.response";
 import { IProfileResponse,ICoverImageResponse } from "./user.entities";
 import { ILoginResponse } from "../auth/auth.entities";
+import { LogoutEnum, RoleEnum, StorageEnum } from "../../common";
+import { IUser } from "../../common/interface/user.interface";
 export class UserService {
     private _userModel = new UserRepository(UserModel) 
     

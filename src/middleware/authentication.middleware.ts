@@ -1,7 +1,7 @@
 import { NextFunction , Request ,Response } from "express";
 import { ForbiddenException, UnauthorizedException } from "../utils/response/error.responce";
-import { decodeToken, TokenTypeEnum } from "../utils/security/token.security";
-import { RoleEnum } from "../db/models/user.model";
+import { decodeToken } from "../utils/security/token.security";
+import { RoleEnum ,TokenTypeEnum } from "../common";
  
 
 export const authenticationMiddleware = (tokenType :TokenTypeEnum  = TokenTypeEnum.access)=>{

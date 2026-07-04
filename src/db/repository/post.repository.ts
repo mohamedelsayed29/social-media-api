@@ -1,5 +1,5 @@
 import { DatabaseRepository } from "./database.repository";
-import {IPost as TDocument} from "../models/post.model"
+import {IPost as TDocument} from "../../common/interface/post.interface"
 import { Model } from "mongoose";
 
 

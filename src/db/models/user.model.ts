@@ -1,49 +1,9 @@
 import { Types , Schema, model, models, HydratedDocument } from "mongoose";
 import { generateHash } from "../../utils/security/hash.security";
 import { emailEventEmitter } from "../../utils/event/email.event";
+import { GenderEnum, ProviderEnum, RoleEnum } from "../../common";
+import { IUser } from "../../common/interface/user.interface";
 
-
-export enum GenderEnum{
-    male = "male",
-    female = "female"
-}
-export enum RoleEnum{
-    user = "user",
-    admin = "admin"
-}
-
-export enum ProviderEnum{
-    google = "google",
-    system = "system"
-}
-
-export interface IUser{
-    _id:Types.ObjectId;
-    firstName:string; 
-    lastName:string;
-    username:string;
-    email:string;
-    phoneNumber?:string;
-    gender?:GenderEnum
-    address?:string; 
-    password:string;
-    slug?:string;
-    confirmEmailOtp?:string; 
-    confirmedAt?:Date;
-    resetPasswordOtp?:string;
-    changeCredentialTime?:Date;
-    profileImage?:string
-    tempProfileImage?:string
-    freezeedAt?:Date;
-    freezeedBy?:Types.ObjectId;
-    restoredAt?:Date;
-    restoredBy?:Types.ObjectId;
-    coverImage?:string[]
-    role:RoleEnum; 
-    provider:ProviderEnum;
-    createdAt:Date;
-    updatedAt?:Date;
-}
 
 const userSchema = new Schema<IUser>(
     {
@@ -72,7 +32,10 @@ const userSchema = new Schema<IUser>(
         resetPasswordOtp:{type:String},
         changeCredentialTime:{type:Date},
         role:{type:String, enum:RoleEnum, default:RoleEnum.user},
-        provider:{type:String, enum:ProviderEnum, default:ProviderEnum.system }
+        provider:{type:String, enum:ProviderEnum, default:ProviderEnum.system },
+        friends:[{
+            type:{type:Types.ObjectId, ref:"User"},
+        }]
 
     },
     {
