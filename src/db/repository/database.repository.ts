@@ -1,5 +1,4 @@
-import { CreateOptions, DeleteResult, FlattenMaps, HydratedDocument, Model, MongooseUpdateQueryOptions, PopulateOptions, ProjectionType, QueryFilter, QueryOptions, RootFilterQuery, Types, UpdateQuery, UpdateWriteOpResult } from "mongoose";
-
+import { CreateOptions, DeleteResult, FlattenMaps, RootFilterQuery, HydratedDocument, Model, MongooseUpdateQueryOptions, PopulateOptions, ProjectionType, QueryFilter, QueryOptions, Types, UpdateQuery, UpdateWriteOpResult } from "mongoose";
 export type Lean<T> = HydratedDocument<FlattenMaps<T>>
 
 export abstract class DatabaseRepository<TDocument> {
@@ -25,10 +24,10 @@ export abstract class DatabaseRepository<TDocument> {
     }
 
     async find({ filter, select, options }: {
-        filter?: QueryFilter<TDocument>,
+        filter?: RootFilterQuery<TDocument>,
         select?: ProjectionType<TDocument> | null | undefined,
         options?: QueryOptions<TDocument> | null | undefined
-    }): Promise<Lean<TDocument> | HydratedDocument<TDocument>[] | []> {
+    }): Promise<HydratedDocument<TDocument>[]> {
         const doc = this.model.find(filter || { }).select(select || "");
         if (options?.populate) doc.populate(options.populate as PopulateOptions[]);
         if (options?.lean) doc.lean(options.lean);
@@ -36,7 +35,7 @@ export abstract class DatabaseRepository<TDocument> {
     }
 
     async findOne({ filter, select, options }: {
-        filter?: QueryFilter<TDocument>,
+        filter?: RootFilterQuery<TDocument>,
         select?: ProjectionType<TDocument> | null | undefined,
         options?: QueryOptions<TDocument> | null | undefined
     }): Promise<Lean<TDocument> | HydratedDocument<TDocument> | null> {
@@ -47,7 +46,21 @@ export abstract class DatabaseRepository<TDocument> {
     }
 
     async updateOne({ filter, update, options }: { filter: RootFilterQuery<TDocument>, update: UpdateQuery<TDocument>, options?: MongooseUpdateQueryOptions<TDocument> | null | undefined }): Promise<UpdateWriteOpResult> {
-        return await this.model.updateOne(filter, { ...update, $inc: { __v: 1 } }, options || {})
+        const updateOptions = {
+            ...(options || {}),
+            updatePipeline: Array.isArray(update) ? true : options?.updatePipeline,
+        }
+
+        if (Array.isArray(update)) {
+            update.push({
+                $set: {
+                    __v: { $add: ["$__v", 1] }
+                }
+            })
+            return await this.model.updateOne(filter, update, updateOptions)
+        }
+
+        return await this.model.updateOne(filter, { ...update, $inc: { __v: 1 } }, updateOptions)
     }
 
     async deleteOne({ filter }: { filter: RootFilterQuery<TDocument>}): Promise<DeleteResult> {

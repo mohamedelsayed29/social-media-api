@@ -17,11 +17,21 @@ const postSchema = new Schema<IPost>({
     freezeedAt:{type:Date},
     restoredBy:{type:Schema.Types.ObjectId , ref:"User"},
     restoredAt:{type:Date},
-    createdBy:{type:Schema.Types.ObjectId , ref:"User" , required:true}
+    createdBy:{type:Schema.Types.ObjectId , ref:"User" , required:true},
+  
 },{timestamps:true , strictQuery:true})
 
 
 postSchema.pre(["findOneAndUpdate","updateOne"],async function(next){
+    const query = this.getQuery();
+    if(query.paranoid === false){
+        this.setQuery({...query})
+    }else{
+        this.setQuery({...query,freezedAt:{$exists:false}})
+    }
+})
+
+postSchema.pre(["findOne","find"],async function(next){
     const query = this.getQuery();
     if(query.paranoid === false){
         this.setQuery({...query})

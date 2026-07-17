@@ -16,4 +16,5 @@ export interface IPost{
     createdBy:Types.ObjectId,
     updatedAt?:Date,
     createdAt:Date
+    
 }
