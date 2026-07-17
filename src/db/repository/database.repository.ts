@@ -25,13 +25,33 @@ export abstract class DatabaseRepository<TDocument> {
 
     async find({ filter, select, options }: {
         filter?: RootFilterQuery<TDocument>,
-        select?: ProjectionType<TDocument> | null | undefined,
-        options?: QueryOptions<TDocument> | null | undefined
+        select?: ProjectionType<TDocument> | undefined,
+        options?: QueryOptions<TDocument> | undefined
     }): Promise<HydratedDocument<TDocument>[]> {
         const doc = this.model.find(filter || { }).select(select || "");
         if (options?.populate) doc.populate(options.populate as PopulateOptions[]);
         if (options?.lean) doc.lean(options.lean);
+        if(options?.limit) doc.limit(options.limit)
+        if(options?.skip) doc.skip(options.skip)
         return await doc.exec();
+    }
+
+    async paginate({ filter = {}, select = {}, options = {} , size = 5 , page = 1 }: {
+        filter?: RootFilterQuery<TDocument>,
+        select?: ProjectionType<TDocument>  | undefined,
+        options?: QueryOptions<TDocument>  | undefined,
+        size?: number,
+        page?: number
+    }){
+        let docsCount: number | undefined = undefined;
+        let pagesCount: number | undefined = undefined;
+       page = Math.floor(page < 1 ? 1 : page);
+       options.limit = Math.floor(size < 1 || !size  ? 5 : size);
+       options.skip = (page - 1) * options.limit;
+       pagesCount = Math.ceil(await this.model.countDocuments(filter) / options.limit);
+       docsCount = await this.model.countDocuments(filter);
+       const results =  await this.find({filter,select,options})
+       return { results, docsCount, pagesCount , currentPage: page, pageSize: options.limit }
     }
 
     async findOne({ filter, select, options }: {

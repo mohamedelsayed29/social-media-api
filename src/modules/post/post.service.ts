@@ -158,6 +158,18 @@ class PostService{
 
       return res.status(200).json({message:"Done",post})
     }
+
+    getPosts  = async(req:Request , res:Response):Promise<Response>=>{
+        let {page , size} = req.query as {page?:string , size?:string}
+      const posts = await this._postModel.paginate({
+        filter:{
+            $or: postAvailability(req, res)
+        },
+        page : page ? parseInt(page) : 1,
+        size : size ? parseInt(size) : 5
+      })
+      return res.status(200).json({message:"Done",posts})
+    }
 }
  
 export const postService =  new PostService() 

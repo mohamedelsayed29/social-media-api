@@ -32,5 +32,12 @@ router.patch(
   validation(validators.likePostSchema),
   postService.likePost
 );
+
+router.get(
+  '/',
+  authenticationMiddleware(TokenTypeEnum.access),
+  postService.getPosts
+);
+
 export default router; 
  
