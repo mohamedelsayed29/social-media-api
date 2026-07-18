@@ -17,7 +17,7 @@ export abstract class DatabaseRepository<TDocument> {
         update : UpdateQuery<TDocument>,
         options?: QueryOptions<TDocument> | null | undefined
     }): Promise<Lean<TDocument> | HydratedDocument<TDocument> | null> {  
-        const doc = this.model.findOneAndUpdate(filter,update)
+        const doc = this.model.findOneAndUpdate(filter, update, options || {})
         if (options?.populate) doc.populate(options.populate as PopulateOptions[]);
         if (options?.lean) doc.lean(options.lean);
         return await doc.exec();

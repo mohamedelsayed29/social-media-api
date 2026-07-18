@@ -30,4 +30,11 @@ router.post('/:commentId/reply',
     validation(validators.createReplySchema),
     commentService.createReply
 )
+
+router.patch('/:commentId/like',
+    authenticationMiddleware(TokenTypeEnum.access),
+    authorizationMiddleware(endPoint.likeComment),
+    validation(validators.likeCommentSchema),
+    commentService.likeComment
+)
 export default router;
