@@ -59,7 +59,6 @@ export const createLoginCredentials = async(user:HUserDocument)=>{
     const signatureLevel = await detectSignatureLevel(user.role);
     const signatures = await getSignatures(signatureLevel);
     const jwtid = uuid()
-    console.log(signatures);
     
     const accessToken = await generateToken({
         payload:{userId:user._id,role:user.role},

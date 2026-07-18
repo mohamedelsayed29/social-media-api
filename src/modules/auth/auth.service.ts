@@ -26,7 +26,6 @@ class AuthenticationService{
             password,
             phoneNumber,
         }: ISignupDto = req.body;
-        console.log(req.body);
         
         const checkUser = await this._userModel.findOne({filter:{email},select:"email",options:{lean:true}})
         

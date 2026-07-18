@@ -6,9 +6,11 @@ import { cloudFileUpload, fileValidation } from "../../utils/multer/cloud.multer
 import * as validators from "./post.validation"
 import { validation } from "../../middleware/validation.middleware";
 import { StorageEnum, TokenTypeEnum } from "../../common";
+import commentRouter from "../comment/comment.controller";
 
 const router:Router = Router();
 
+router.use("/:postId/comment", commentRouter)
 
 router.post('/',
   authorizationMiddleware(endPoint.createPost),

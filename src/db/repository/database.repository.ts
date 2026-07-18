@@ -59,7 +59,7 @@ export abstract class DatabaseRepository<TDocument> {
         select?: ProjectionType<TDocument> | null | undefined,
         options?: QueryOptions<TDocument> | null | undefined
     }): Promise<Lean<TDocument> | HydratedDocument<TDocument> | null> {
-        const doc = this.model.findOne(filter).select(select || "");
+        const doc = this.model.findOne(filter , select , options ).select(select || "");
         if (options?.populate) doc.populate(options.populate as PopulateOptions[]);
         if (options?.lean) doc.lean(options.lean);
         return await doc.exec();
