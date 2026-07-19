@@ -1,20 +1,23 @@
 import { Response,NextFunction, Request } from "express";
 import { IFreezeAccountParams, IHardDeleteAccountParams, ILogoutDto, IRestoreAccountParams } from "./user.dto";
 import { createLoginCredentials, createRevokeToken } from "../../utils/security/token.security";
-import { UpdateQuery } from "mongoose";
+import { Types, UpdateQuery } from "mongoose";
 import { HUserDocument, UserModel } from "../../db/models/user.model";
 import { UserRepository } from "../../db/repository/user.repository";
 import { JwtPayload } from "jsonwebtoken";
 import { createPresignedUrl, deleteFiles, deleteFolderByPrefix, uploadFiles } from "../../utils/multer/s3.config";
-import { BadRequestException, ForbiddenException } from "../../utils/response/error.responce";
+import { BadRequestException, ForbiddenException, NotFoundException } from "../../utils/response/error.responce";
 import { s3EventEmitter } from "../../utils/multer/s3.event";
 import { successResponse } from "../../utils/response/success.response";
 import { IProfileResponse,ICoverImageResponse } from "./user.entities";
 import { ILoginResponse } from "../auth/auth.entities";
 import { LogoutEnum, RoleEnum, StorageEnum } from "../../common";
 import { IUser } from "../../common/interface/user.interface";
+import { FriendRequestRepository } from "../../db/repository/friendRequest.repository";
+import { FriendRequestModel } from "../../db/models/friendRequest.model";
 export class UserService {
-    private _userModel = new UserRepository(UserModel) 
+    private _userModel = new UserRepository(UserModel)
+    private _friendRequestModel = new FriendRequestRepository(FriendRequestModel)
     
     constructor(){}
 
@@ -178,6 +181,33 @@ export class UserService {
             statusCode:201,
             message:"Token Refreshed Successfully",
             data:{credentials}
+        })
+    }
+
+
+    friendRequest = async(req:Request,res:Response,next:NextFunction):Promise<Response> =>{
+        const {userId} = req.params as {userId:string}
+        const checkFriendRequest = await this._friendRequestModel.findOne({
+            filter:{
+                createdBy:{$in:[req.user?._id,userId]},
+                sendTo:{$in:[req.user?._id,userId]}
+            }
+        })
+        if(checkFriendRequest) throw new BadRequestException("Friend Request already sent or received")
+        const user = await this._userModel.findOne({
+            filter:{_id:userId}
+        })
+        if(!user) throw new NotFoundException("User not found")
+        const [friend] = await this._friendRequestModel.create({
+            data:[{
+                createdBy:req.user?._id as Types.ObjectId,
+                sendTo:userId as unknown as Types.ObjectId
+            }]
+        }) || []
+        if(!friend) throw new BadRequestException("Failed to send friend request")
+        return successResponse({
+            res,
+            message:"Friend Request Sent Successfully"
         })
     }
 }

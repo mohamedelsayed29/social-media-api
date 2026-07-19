@@ -66,21 +66,24 @@ export abstract class DatabaseRepository<TDocument> {
     }
 
     async updateOne({ filter, update, options }: { filter: RootFilterQuery<TDocument>, update: UpdateQuery<TDocument>, options?: MongooseUpdateQueryOptions<TDocument> | null | undefined }): Promise<UpdateWriteOpResult> {
+        // Ensure `updatePipeline` is a strict boolean to satisfy Mongoose typings
+        const { updatePipeline: _updatePipeline, ...restOptions } = options || {};
         const updateOptions = {
-            ...(options || {}),
-            updatePipeline: Array.isArray(update) ? true : options?.updatePipeline,
-        }
+            ...(restOptions as any),
+            updatePipeline: Array.isArray(update) ? true : Boolean(_updatePipeline),
+        } as unknown as MongooseUpdateQueryOptions<TDocument>;
 
         if (Array.isArray(update)) {
+            // append version increment stage for pipeline updates
             update.push({
                 $set: {
                     __v: { $add: ["$__v", 1] }
                 }
-            })
-            return await this.model.updateOne(filter, update, updateOptions)
+            });
+            return await this.model.updateOne(filter, update as any, updateOptions);
         }
 
-        return await this.model.updateOne(filter, { ...update, $inc: { __v: 1 } }, updateOptions)
+        return await this.model.updateOne(filter, { ...(update as any), $inc: { __v: 1 } }, updateOptions);
     }
 
     async deleteOne({ filter }: { filter: RootFilterQuery<TDocument>}): Promise<DeleteResult> {

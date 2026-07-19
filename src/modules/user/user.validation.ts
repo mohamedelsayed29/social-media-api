@@ -1,6 +1,7 @@
  import {z} from 'zod'
 import { Types } from 'mongoose'
 import { LogoutEnum } from '../../common'
+import { generalFields } from '../../middleware/validation.middleware'
 
 export const logout = {
     body:z.strictObject({
@@ -24,6 +25,12 @@ export const restoreAccount = {
         return Types.ObjectId.isValid(data.userId);
     },
     {error:"Invalid userId",path:["userId"]})
+}
+
+export const friendRequestShema = {
+    params:z.strictObject({
+        userId:generalFields.id
+    })
 }
 
 export const hardDeleteAccount = restoreAccount

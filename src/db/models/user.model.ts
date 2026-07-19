@@ -72,6 +72,14 @@ userSchema.post("save", async function(doc,next){
         })        
     }
 })
+userSchema.pre(["find","findOne"],async function(next){
+    const query = this.getQuery();
+    if(query.paranoid === false){
+        this.setQuery({...query})
+    }else{
+        this.setQuery({...query,freezeedAt:{$exists:false}})
+    }
+})
 
 export const UserModel = models.User || model<IUser>("User",userSchema)
 export type HUserDocument = HydratedDocument<IUser>
