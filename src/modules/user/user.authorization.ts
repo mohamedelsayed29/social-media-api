@@ -5,4 +5,5 @@ export const endPoint ={
     restoreAccount:[RoleEnum.admin],
     hardDeleteAccount:[RoleEnum.admin],
     friendRequest:[RoleEnum.user],
+    acceptFriendRequest:[RoleEnum.user]
 }

@@ -33,4 +33,10 @@ export const friendRequestShema = {
     })
 }
 
+export const acceptFriendRequestSchema = {
+    params:z.strictObject({
+        requestId:generalFields.id
+    })
+}
+
 export const hardDeleteAccount = restoreAccount

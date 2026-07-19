@@ -34,11 +34,18 @@ router.post("/logout",authenticationMiddleware(),validation(validators.logout), 
 
 router.post ("/refresh-token",authenticationMiddleware(TokenTypeEnum.refresh ),userService.refreshToken);
 
-router.post ("/:userId/friend-requests",
+router.post("/:userId/friend-requests",
     authenticationMiddleware(TokenTypeEnum.access),
     authorizationMiddleware(endPoint.friendRequest),
     validation(validators.friendRequestShema),
     userService.friendRequest
+);
+
+router.patch("/:requestId/accept",
+    authenticationMiddleware(TokenTypeEnum.access),
+    authorizationMiddleware(endPoint.acceptFriendRequest),
+    validation(validators.acceptFriendRequestSchema),
+    userService.acceptFriendRequest
 );
 
 

@@ -13,6 +13,7 @@ import { IProfileResponse,ICoverImageResponse } from "./user.entities";
 import { ILoginResponse } from "../auth/auth.entities";
 import { LogoutEnum, RoleEnum, StorageEnum } from "../../common";
 import { IUser } from "../../common/interface/user.interface";
+import { IFriendRequest } from "../../common/interface/friendRequest.interface";
 import { FriendRequestRepository } from "../../db/repository/friendRequest.repository";
 import { FriendRequestModel } from "../../db/models/friendRequest.model";
 export class UserService {
@@ -208,6 +209,48 @@ export class UserService {
         return successResponse({
             res,
             message:"Friend Request Sent Successfully"
+        })
+    }
+
+    acceptFriendRequest = async(req:Request,res:Response,next:NextFunction):Promise<Response> =>{
+        const {requestId} = req.params as {requestId :string}
+        const currentUserId = req.user?._id
+        if(!currentUserId) throw new BadRequestException("Authentication required")
+
+        const checkFriendRequest = await this._friendRequestModel.findOneAndUpdate({
+            filter:{
+                _id:requestId,
+                sendTo:currentUserId,
+                acceptedAt:{$exists:false}
+            },
+            update:{
+                $set:{
+                    acceptedAt:new Date()
+                }
+            },
+            options:{ new: true }
+        }) as IFriendRequest | null
+
+        if(!checkFriendRequest) throw new BadRequestException("Friend Request not found or already accepted")
+
+        await Promise.all([
+            this._userModel.updateOne({
+                filter:{_id:checkFriendRequest.createdBy},
+                update:{
+                    $addToSet:{friends:checkFriendRequest.sendTo}
+                }
+            }),
+            this._userModel.updateOne({
+                filter:{_id:checkFriendRequest.sendTo},
+                update:{
+                    $addToSet:{friends:checkFriendRequest.createdBy}
+                }
+            })
+        ])
+       
+        return successResponse({
+            res,
+            message:"Accept Friend Request Sent Successfully"
         })
     }
 }
