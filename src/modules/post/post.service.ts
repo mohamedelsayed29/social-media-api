@@ -10,6 +10,7 @@ import { likePostQueryInputsDto } from "./post.dto"
 import { Types, UpdateQuery } from "mongoose"
 import { AvailabilityEnum, likeActionEnum } from "../../common/enums/post.enum"
 
+
 export const postAvailability = (req:Request , res:Response)=>{
     return[
         {availability:AvailabilityEnum.public},
@@ -160,14 +161,21 @@ class PostService{
     }
 
     getPosts  = async(req:Request , res:Response):Promise<Response>=>{
-        let {page , size} = req.query as {page?:string , size?:string}
-      const posts = await this._postModel.paginate({
-        filter:{
-            $or: postAvailability(req, res)
-        },
-        page : page ? parseInt(page) : 1,
-        size : size ? parseInt(size) : 5
-      })
+        // let {page , size} = req.query as {page?:string , size?:string}
+    //   const posts = await this._postModel.paginate({
+    //     filter:{
+    //         $or: postAvailability(req, res)
+    //     },
+    //     page : page ? parseInt(page) : 1,
+    //     size : size ? parseInt(size) : 5
+    //   })
+
+        const posts = await this._postModel.findCursor({
+            filter:{
+                $or: postAvailability(req, res)
+            }, 
+        })
+
       return res.status(200).json({message:"Done",posts})
     }
 }
