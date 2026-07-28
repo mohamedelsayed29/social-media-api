@@ -6,11 +6,12 @@ import rateLimit from 'express-rate-limit'
 import {resolve} from 'node:path'
 import { config } from 'dotenv'
 import * as controller from './modules/controller.index'
-import { globalErrorHandler, NotFoundException } from './utils/response/error.responce'
+import {globalErrorHandler, NotFoundException } from './utils/response/error.responce'
 import connectDB from './db/connection.db'
 import { createGetPresignedUrl, deleteFile, deleteFiles, getFile } from './utils/multer/s3.config'
 import { promisify } from 'node:util'
 import { pipeline } from 'stream'
+import { initialize } from './modules/gateway/gateway'
 const createS3WriteStream = promisify(pipeline)
 config({path:resolve("./config/.env.development")})
 
@@ -26,7 +27,6 @@ const limiter = rateLimit({
 const bootstrap = async ():Promise<void>=>{
     const app : Express  =  express()
     const port : number | string = process.env.PORT || 5000
-    
     app.use(express.json(), helmet() , cors())
     app.use(limiter)
 
@@ -89,9 +89,11 @@ const bootstrap = async ():Promise<void>=>{
         return res.status(200).json({message: "List directory route hit", data:{key}})
     })
 
-    app.listen(port,()=>{
+    const httpServer = app.listen(port,()=>{
         console.log(`server is running on port ${port}`);
-    })
+    });
+
+    initialize(httpServer)
 
     app.use(globalErrorHandler)
 

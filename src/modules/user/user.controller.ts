@@ -6,9 +6,16 @@ import { validation } from "../../middleware/validation.middleware";
 import * as validators from './user.validation'
 import { cloudFileUpload, fileValidation } from "../../utils/multer/cloud.multer";
 import { StorageEnum, TokenTypeEnum } from "../../common";
-
+import chatRouter from "../chat/chat.controller"
 const router:Router = Router();
-router.get("/profile",authorizationMiddleware(endPoint.profile),userService.profile);
+
+//http://localhot:3000/api/user/{userId}/chat
+router.use("/:userId/chat",chatRouter)
+
+router.get("/profile",
+    authorizationMiddleware(endPoint.profile),
+    userService.profile
+);
 
 router.patch("/profile-image",
     authenticationMiddleware(),
@@ -22,17 +29,36 @@ router.patch("/profile-cover-image",
     userService.profileCoverImage 
 );
 
-router.delete("{/:userId}/freeze-account",authenticationMiddleware(),validation(validators.freezeAccount),userService.freezeAccount);
+router.delete("{/:userId}/freeze-account",
+    authenticationMiddleware(),
+    validation(validators.freezeAccount),
+    userService.freezeAccount
+);
 
-router.delete("/:userId/hard-delete-account",authorizationMiddleware(endPoint.hardDeleteAccount),validation(validators.hardDeleteAccount),userService.hardDeleteAccount);
+router.delete("/:userId/hard-delete-account",
+    authorizationMiddleware(endPoint.hardDeleteAccount),
+    validation(validators.hardDeleteAccount),
+    userService.hardDeleteAccount
+);
 
 
-router.patch("{/:userId}/restore-account",authorizationMiddleware(endPoint.restoreAccount),validation(validators.restoreAccount),userService.restoreAccount);
+router.patch("{/:userId}/restore-account",
+    authorizationMiddleware(endPoint.restoreAccount),
+    validation(validators.restoreAccount),
+    userService.restoreAccount
+);
 
 
-router.post("/logout",authenticationMiddleware(),validation(validators.logout), userService.logout);
+router.post("/logout",
+    authenticationMiddleware(),
+    validation(validators.logout),
+    userService.logout
+);
 
-router.post ("/refresh-token",authenticationMiddleware(TokenTypeEnum.refresh ),userService.refreshToken);
+router.post ("/refresh-token",
+    authenticationMiddleware(TokenTypeEnum.refresh),
+    userService.refreshToken
+);
 
 router.post("/:userId/friend-requests",
     authenticationMiddleware(TokenTypeEnum.access),
