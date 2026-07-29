@@ -13,8 +13,9 @@ import { promisify } from 'node:util'
 import { pipeline } from 'stream'
 import { initialize } from './modules/gateway/gateway'
 const createS3WriteStream = promisify(pipeline)
-config({path:resolve("./config/.env.development")})
-
+if (process.env.NODE_ENV !== 'production') {
+  config({path:resolve("./config/.env.development")})
+}
 
 const limiter = rateLimit({
     windowMs:60 * 60000,
