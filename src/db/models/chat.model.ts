@@ -51,8 +51,8 @@ const chatSchema = new Schema<IChat>({
     groupImage:String,
     roomId:{
         type:String,
-        required:function(){
-            return this.roomId
+        required:function(this: IChat) {
+            return Boolean(this.roomId)
         }
     },
     messages:[messageSchema]
