@@ -8,7 +8,10 @@ import { deleteFiles, uploadFiles } from "../../utils/multer/s3.config"
 import {v4 as uuid} from 'uuid'
 import { likePostQueryInputsDto } from "./post.dto"
 import { Types, UpdateQuery } from "mongoose"
-import { AvailabilityEnum, likeActionEnum } from "../../common/enums/post.enum"
+import { AvailabilityEnum, likeActionEnum, saveActionEnum } from "../../common/enums/post.enum"
+import { CommentModel } from "../../db/models/comment.model"
+import { emitPostCreated } from "./post.realtime"
+import { createNotification } from "../notification/notification.service"
 
 
 export const postAvailability = (req:Request , res:Response)=>{
@@ -25,11 +28,76 @@ export const postAvailability = (req:Request , res:Response)=>{
         },
     ]
 }
+
+const toId = (value:any):string => {
+    return value?._id?.toString?.() || value?.toString?.() || ""
+}
+
+export const formatPostsForResponse = async(posts:any[], currentUserId?:Types.ObjectId, savedPostIds:string[] = [])=>{
+    const postIds = posts.map((post)=> post._id)
+    const comments = await (CommentModel as any).find({
+        postId:{$in:postIds},
+        commentId:{$exists:false}
+    })
+    .populate("createdBy","firstName lastName profileImage email")
+    .sort({createdAt:1})
+    .lean()
+
+    const commentsByPost = new Map<string, any[]>()
+    for (const comment of comments) {
+        const postId = toId(comment.postId)
+        const currentComments = commentsByPost.get(postId) || []
+        currentComments.push({
+            ...comment,
+            author:comment.createdBy,
+            likesCount:comment.likes?.length || 0,
+            likedByMe:Boolean(currentUserId && comment.likes?.some((like:any)=> toId(like) === currentUserId.toString()))
+        })
+        commentsByPost.set(postId,currentComments)
+    }
+
+    return posts.map((post)=>{
+        const plainPost = post?.toObject ? post.toObject() : post
+        const postComments = commentsByPost.get(toId(plainPost._id)) || []
+        return {
+            ...plainPost,
+            author:plainPost.createdBy,
+            likesCount:plainPost.likes?.length || 0,
+            commentsCount:postComments.length,
+            likedByMe:Boolean(currentUserId && plainPost.likes?.some((like:any)=> toId(like) === currentUserId.toString())),
+            savedByMe:savedPostIds.includes(toId(plainPost._id)),
+            comments:postComments
+        }
+    })
+}
  
 class PostService{
     private _postModel = new PostRepository(PostModel)
     private _userModel = new UserRepository(UserModel)
     constructor(){}  
+
+    private getPostRecipientIds = (post:any, creator:any):"all" | string[] => {
+        if(post.availability === AvailabilityEnum.public) return "all"
+
+        const creatorId = toId(creator?._id || creator)
+        const recipientIds = new Set<string>([creatorId])
+
+        if(post.availability === AvailabilityEnum.friends){
+            for (const friendId of creator?.friends || []) {
+                const id = toId(friendId)
+                if(id) recipientIds.add(id)
+            }
+        }
+
+        if(post.availability !== AvailabilityEnum.onlyMe){
+            for (const tagId of post.tags || []) {
+                const id = toId(tagId)
+                if(id) recipientIds.add(id)
+            }
+        }
+
+        return [...recipientIds].filter(Boolean)
+    }
 
     createPost = async(req:Request , res:Response):Promise<Response>=>{
         if(
@@ -61,7 +129,15 @@ class PostService{
             }
             throw new BadRequestException("Fail to Create Post")
         }
-        return res.status(201).json({message:"Post Created"})
+        const createdPost = await (PostModel as any).findById(post._id)
+            .populate("createdBy","firstName lastName profileImage email")
+            .populate("tags","firstName lastName profileImage email")
+        const [formattedPost] = await formatPostsForResponse([createdPost], req.user?._id)
+        emitPostCreated({
+            post:formattedPost,
+            recipientIds:this.getPostRecipientIds(post, req.user)
+        })
+        return res.status(201).json({message:"Post Created", data:{post:formattedPost}})
     }
 
     updatePost = async(req:Request , res:Response):Promise<Response>=>{
@@ -157,7 +233,46 @@ class PostService{
             throw new NotFoundException("invalid PostId or Post is not Exist ")
         }
 
+      const alreadyLiked = post.likes?.some((like:any)=> toId(like) === req.user?._id?.toString())
+      if(action !== likeActionEnum.unlike && !alreadyLiked){
+        await createNotification({
+            recipient:post.createdBy,
+            actor:req.user?._id as Types.ObjectId,
+            type:"post_like",
+            message:`${req.user?.username || "Someone"} liked your post`,
+            post:post._id
+        })
+      }
+
       return res.status(200).json({message:"Done",post})
+    }
+
+    savePost = async(req:Request , res:Response):Promise<Response>=>{
+      const {postId} = req.params as {postId:string}
+      const {action} = req.query as {action:saveActionEnum}
+
+      const post = await this._postModel.findOne({
+        filter:{
+            _id:postId,
+            $or:postAvailability(req, res)
+        }
+      })
+      if(!post){
+        throw new NotFoundException("invalid PostId or Post is not Exist ")
+      }
+
+      const saved = action !== saveActionEnum.unsave
+      await this._userModel.updateOne({
+        filter:{_id:req.user?._id},
+        update:saved
+            ? {$addToSet:{savedPosts:post._id}}
+            : {$pull:{savedPosts:post._id}}
+      })
+
+      return res.status(200).json({
+        message:saved ? "Post Saved" : "Post Unsaved",
+        data:{postId:post._id, saved}
+      })
     }
 
     getPosts  = async(req:Request , res:Response):Promise<Response>=>{
@@ -170,14 +285,22 @@ class PostService{
     //     size : size ? parseInt(size) : 5
     //   })
 
-        const posts = await this._postModel.findCursor({
-            filter:{
-                $or: postAvailability(req, res)
-            }, 
+        const posts = await (PostModel as any).find({
+            $or: postAvailability(req, res)
         })
+        .populate("createdBy","firstName lastName profileImage email")
+        .populate("tags","firstName lastName profileImage email")
+        .sort({createdAt:-1})
 
-      return res.status(200).json({message:"Done",posts})
+      return res.status(200).json({
+        message:"Done",
+        posts:await formatPostsForResponse(
+            posts,
+            req.user?._id,
+            (req.user?.savedPosts || []).map((postId:any)=> toId(postId))
+        )
+      })
     }
 }
  
-export const postService =  new PostService() 
+export const postService =  new PostService()

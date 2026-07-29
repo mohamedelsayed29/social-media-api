@@ -10,16 +10,40 @@ import chatRouter from "../chat/chat.controller"
 const router:Router = Router();
 
 //http://localhot:3000/api/user/{userId}/chat
-router.use("/:userId/chat",chatRouter)
-
 router.get("/profile",
     authorizationMiddleware(endPoint.profile),
     userService.profile
 );
 
+router.patch("/profile",
+    authenticationMiddleware(TokenTypeEnum.access),
+    validation(validators.updateProfileSchema),
+    userService.updateProfile
+);
+
+router.get("/search",
+    authenticationMiddleware(TokenTypeEnum.access),
+    validation(validators.searchUsersSchema),
+    userService.searchUsers
+);
+
+router.get("/friend-requests",
+    authenticationMiddleware(TokenTypeEnum.access),
+    validation(validators.getFriendRequestsSchema),
+    userService.getFriendRequests
+);
+
+router.use("/:userId/chat",chatRouter)
+
+router.get("/:userId",
+    authenticationMiddleware(TokenTypeEnum.access),
+    validation(validators.getPublicProfileSchema),
+    userService.publicProfile
+);
+
 router.patch("/profile-image",
     authenticationMiddleware(),
-    // cloudFileUpload({validation:fileValidation.images,storageApproach:StorageEnum.disk}).single("image"),
+    cloudFileUpload({validation:fileValidation.images,storageApproach:StorageEnum.disk,maxSize:5}).single("image"),
     userService.profileImage 
 );
 
@@ -72,6 +96,27 @@ router.patch("/:requestId/accept",
     authorizationMiddleware(endPoint.acceptFriendRequest),
     validation(validators.acceptFriendRequestSchema),
     userService.acceptFriendRequest
+);
+
+router.patch("/:requestId/reject",
+    authenticationMiddleware(TokenTypeEnum.access),
+    authorizationMiddleware(endPoint.acceptFriendRequest),
+    validation(validators.rejectFriendRequestSchema),
+    userService.rejectFriendRequest
+);
+
+router.delete("/:requestId/friend-requests",
+    authenticationMiddleware(TokenTypeEnum.access),
+    authorizationMiddleware(endPoint.acceptFriendRequest),
+    validation(validators.cancelFriendRequestSchema),
+    userService.cancelFriendRequest
+);
+
+router.delete("/:userId/friend",
+    authenticationMiddleware(TokenTypeEnum.access),
+    authorizationMiddleware(endPoint.acceptFriendRequest),
+    validation(validators.deleteFriendSchema),
+    userService.deleteFriend
 );
 
 

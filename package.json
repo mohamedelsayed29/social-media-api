@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "concurrently \"tsc -watch\" \"node --watch dist/index.js\""
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && concurrently \"tsc -watch\" \"node --watch dist/index.js\""
   },
   "keywords": [],
   "author": "",

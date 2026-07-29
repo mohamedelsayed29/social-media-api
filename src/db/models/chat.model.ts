@@ -18,20 +18,36 @@ const messageSchema = new Schema<IMessage>({
   
 },{timestamps:true , strictQuery:true})
 
-const chatSchema = new Schema<IChat>({
-   participants:[
-    {        
+const groupMemberSchema = new Schema({
+    user:{
         type:Schema.Types.ObjectId,
         ref:"User",
         required:true
-    } 
-   ],
+    },
+    role:{
+        type:String,
+        enum:["admin","member"],
+        default:"member",
+        required:true
+    }
+},{_id:false})
+
+const chatSchema = new Schema<IChat>({
+    participants:[
+        {
+            type:Schema.Types.ObjectId,
+            ref:"User",
+            required:true
+        }
+    ],
+    members:[groupMemberSchema],
     createdBy:{
         type:Schema.Types.ObjectId,
         ref:"User",
         required:true
     },
     group:String,
+    groupDescription:String,
     groupImage:String,
     roomId:{
         type:String,

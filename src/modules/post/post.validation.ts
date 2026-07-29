@@ -1,7 +1,7 @@
 import z from "zod"
 import { generalFields } from "../../middleware/validation.middleware"
 import { fileValidation } from "../../utils/multer/cloud.multer"
-import { AllowCommentsEnum, AvailabilityEnum, likeActionEnum } from "../../common/enums/post.enum"
+import { AllowCommentsEnum, AvailabilityEnum, likeActionEnum, saveActionEnum } from "../../common/enums/post.enum"
 
 export const createPostSchema = {
     body:z.strictObject({
@@ -74,5 +74,14 @@ export const likePostSchema = {
     }),
     query:z.strictObject({
         action:z.enum(likeActionEnum).default(likeActionEnum.like)
+    })
+}
+
+export const savePostSchema = {
+    params:z.strictObject({
+        postId:generalFields.id
+    }),
+    query:z.strictObject({
+        action:z.enum(saveActionEnum).default(saveActionEnum.save)
     })
 }

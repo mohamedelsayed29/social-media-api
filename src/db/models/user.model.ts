@@ -34,7 +34,12 @@ const userSchema = new Schema<IUser>(
         role:{type:String, enum:RoleEnum, default:RoleEnum.user},
         provider:{type:String, enum:ProviderEnum, default:ProviderEnum.system },
         friends:[{
-            type:{type:Types.ObjectId, ref:"User"},
+            type:Types.ObjectId,
+            ref:"User",
+        }],
+        savedPosts:[{
+            type:Types.ObjectId,
+            ref:"Post",
         }]
 
     },

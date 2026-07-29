@@ -1,6 +1,6 @@
 import { DatabaseRepository, Lean } from "./database.repository";
 import {IPost as TDocument} from "../../common/interface/post.interface"
-import { HydratedDocument, Model, PopulateOptions, ProjectionType, QueryOptions , RootFilterQuery} from "mongoose";
+import { HydratedDocument, Model, PopulateOptions, ProjectionType, QueryOptions } from "mongoose";
 import { CommentRepository } from "./comment.repository";
 import { CommentModel } from "../models/comment.model";
 
@@ -13,7 +13,7 @@ export class PostRepository extends DatabaseRepository<TDocument>{
     }
 
         async findCursor({ filter, select, options }: {
-            filter?: RootFilterQuery<TDocument>,
+            filter?: Record<string, any>,
             select?: ProjectionType<TDocument> | undefined,
             options?: QueryOptions<TDocument> | undefined
         }): Promise<HydratedDocument<TDocument>[] | [] | Lean<TDocument>[]> {

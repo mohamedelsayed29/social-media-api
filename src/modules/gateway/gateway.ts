@@ -4,6 +4,8 @@ import { decodeToken } from "../../utils/security/token.security";
 import { TokenTypeEnum } from "../../common";
 import { IAuthSocket } from "./gateway.dto";
 import { ChatGateway } from "../chat/chat.gateway";
+import { setPostRealtimeBridge } from "../post/post.realtime";
+import { setNotificationRealtimeBridge } from "../notification/notification.realtime";
 
 
 
@@ -33,7 +35,7 @@ export const initialize = (httpServer:httpServer)=>{
             socket.credentials = {user,decoded}
             next()
         }catch{
-            // console.log(BadRequestException("fail error")); 
+            next(new Error("Authentication failed"))
         }
     })
 
@@ -56,7 +58,9 @@ export const initialize = (httpServer:httpServer)=>{
         })
     }
     
-    const chatGateway:ChatGateway = new ChatGateway()
+    const chatGateway:ChatGateway = new ChatGateway(io, connectedSocketIds)
+    setPostRealtimeBridge(io, connectedSocketIds)
+    setNotificationRealtimeBridge(io, connectedSocketIds)
     io.on("connection",(socket:IAuthSocket)=>{
 
         console.log(connectedSocketIds);

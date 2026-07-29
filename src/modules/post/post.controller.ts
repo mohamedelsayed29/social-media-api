@@ -35,11 +35,18 @@ router.patch(
   postService.likePost
 );
 
+router.patch(
+  '/:postId/save',
+  authorizationMiddleware(endPoint.createPost),
+  authenticationMiddleware(TokenTypeEnum.access),
+  validation(validators.savePostSchema),
+  postService.savePost
+);
+
 router.get(
   '/',
   authenticationMiddleware(TokenTypeEnum.access),
   postService.getPosts
 );
 
-export default router; 
- 
+export default router;

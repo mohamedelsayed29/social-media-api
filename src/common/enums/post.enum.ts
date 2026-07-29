@@ -13,3 +13,8 @@ export enum likeActionEnum{
     like = "like",
     unlike = "unlike",
 }
+
+export enum saveActionEnum{
+    save = "save",
+    unsave = "unsave",
+}

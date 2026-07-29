@@ -28,4 +28,5 @@ export interface IUser{
     createdAt:Date;
     updatedAt?:Date;
     friends?:Types.ObjectId[];
+    savedPosts?:Types.ObjectId[];
 }

@@ -26,8 +26,10 @@ const limiter = rateLimit({
 
 const bootstrap = async ():Promise<void>=>{
     const app : Express  =  express()
-    const port : number | string = process.env.PORT || 5000
-    app.use(express.json(), helmet() , cors())
+    const port : number | string = process.env.PORT || 3000
+    app.use(express.json(), helmet({
+        crossOriginResourcePolicy:{policy:"cross-origin"}
+    }) , cors())
     app.use(limiter)
 
 
@@ -36,10 +38,9 @@ const bootstrap = async ():Promise<void>=>{
     }) 
     app.use("/api/auth", controller.authController)
     app.use("/api/users", controller.userController)
+    app.use("/api/chat", controller.chatController)
+    app.use("/api/notifications", controller.notificationController)
     app.use("/api/post", controller.postController)
-    app.all('{/*dummy}',(req:Request,res:Response)=>{
-        throw new NotFoundException("Route not found")
-    })
     //get asset
     app.get('/upload/*path',async (req:Request,res:Response)=>{
         const {downloadName} = req.query as unknown as {downloadName:string}
@@ -87,6 +88,9 @@ const bootstrap = async ():Promise<void>=>{
         const {path} = req.params as unknown as {path:string[]}
         const key = path.join('/')
         return res.status(200).json({message: "List directory route hit", data:{key}})
+    })
+    app.all('{/*dummy}',(req:Request,res:Response)=>{
+        throw new NotFoundException("Route not found")
     })
 
     const httpServer = app.listen(port,()=>{

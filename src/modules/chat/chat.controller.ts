@@ -5,9 +5,35 @@ import { authenticationMiddleware, authorizationMiddleware } from "../../middlew
 import { TokenTypeEnum } from "../../common";
 import { endPoint } from "./chat.authorization";
 import { chatService } from "./chat.service";
+import { cloudFileUpload, fileValidation } from "../../utils/multer/cloud.multer";
+import { StorageEnum } from "../../common";
 const router:Router = Router({
     mergeParams:true
 });
+
+router.post('/groups',
+    authenticationMiddleware(TokenTypeEnum.access),
+    cloudFileUpload({validation:fileValidation.images,storageApproach:StorageEnum.disk,maxSize:5}).single("image"),
+    validation(validators.createGroupSchema),
+    chatService.createGroup
+)
+
+router.get('/groups',
+    authenticationMiddleware(TokenTypeEnum.access),
+    chatService.getGroups
+)
+
+router.patch('/groups/:groupId/members',
+    authenticationMiddleware(TokenTypeEnum.access),
+    validation(validators.addGroupMembersSchema),
+    chatService.addGroupMembers
+)
+
+router.get('/groups/:groupId',
+    authenticationMiddleware(TokenTypeEnum.access),
+    validation(validators.getGroupSchema),
+    chatService.getGroup
+)
 
 // getChat
 router.get('/',
@@ -19,4 +45,4 @@ router.get('/',
 
 
 
-export default router; 
+export default router;

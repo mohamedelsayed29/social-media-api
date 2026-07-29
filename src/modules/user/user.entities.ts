@@ -1,7 +1,7 @@
 import { HUserDocument } from "../../db/models/user.model";
 
 export interface IProfileResponse {
-    url: string,
+    user:Partial <HUserDocument>
 }
 
 export interface ICoverImageResponse {
