@@ -10,7 +10,7 @@ import { createLoginCredentials } from "../../utils/security/token.security";
 import { OAuth2Client, type TokenPayload } from 'google-auth-library' ;
 import { successResponse } from "../../utils/response/success.response";
 import { ILoginResponse } from "./auth.entities";
-import { ProviderEnum } from "../../common";
+import { GenderEnum, IUser, ProviderEnum } from "../../common";
 
 
 class AuthenticationService{
@@ -19,35 +19,41 @@ class AuthenticationService{
     signup = async(req:Request,res:Response):Promise<Response>=>{
 
         let {
-            username,
             firstName,
             lastName,
             email,
             password,
             phoneNumber,
+            gender,
         }: ISignupDto = req.body;
-        
+
         const checkUser = await this._userModel.findOne({filter:{email},select:"email",options:{lean:true}})
-        
+
         if(checkUser) throw new ConflictException("Email already exists")
 
         const otp = generateNumberOtp()
 
+        // Set the real paths directly instead of going through the `username`
+        // virtual: mongoose applies virtual setters last, so it would overwrite
+        // firstName/lastName with the split of the submitted username.
+        const data:Partial<IUser> = {
+            firstName,
+            lastName,
+            slug:`${firstName} ${lastName}`.replaceAll(/\s+/g,"-"),
+            email,
+            password,
+            phoneNumber,
+            confirmEmailOtp: `${otp}`
+        }
+        if(gender) data.gender = gender as GenderEnum
+
         await this._userModel.create(
             {
-                data:[{ 
-                    username,
-                    firstName,
-                    lastName,
-                    email,
-                    password,
-                    phoneNumber,
-                    confirmEmailOtp: `${otp}`
-                }],
+                data:[data],
                 options:{validateBeforeSave:true}
             }
         ) || []
-            
+
         emailEventEmitter.emit("confirmationEmail",{
             to:email,
             otp:otp

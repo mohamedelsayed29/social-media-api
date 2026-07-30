@@ -1,6 +1,7 @@
 export enum GenderEnum{
     male = "male",
-    female = "female"
+    female = "female",
+    other = "other"
 }
 export enum RoleEnum{
     user = "user",

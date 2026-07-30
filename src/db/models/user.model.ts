@@ -1,6 +1,5 @@
 import { Types , Schema, model, models, HydratedDocument } from "mongoose";
 import { generateHash } from "../../utils/security/hash.security";
-import { emailEventEmitter } from "../../utils/event/email.event";
 import { GenderEnum, ProviderEnum, RoleEnum } from "../../common";
 import { IUser } from "../../common/interface/user.interface";
 
@@ -50,33 +49,29 @@ const userSchema = new Schema<IUser>(
     }
 );
 
-userSchema.virtual("username").set(function(value:string){ 
-    const [firstName , lastName] = value.split(" ") || [];
-    this.set({firstName,lastName ,slug:value.replaceAll(/\s+/g,"-")});
+userSchema.virtual("username").set(function(value:string){
+    const fullName = (value || "").trim();
+    if(!fullName) return;
+    const [firstName , ...rest] = fullName.split(/\s+/);
+    const lastName = rest.join(" ");
+    // Only overwrite the real paths we can actually derive, otherwise a
+    // single-word value would wipe an explicitly provided lastName.
+    const update:Record<string,string> = {slug:fullName.replaceAll(/\s+/g,"-")};
+    if(firstName) update.firstName = firstName;
+    if(lastName) update.lastName = lastName;
+    this.set(update);
 }).get(function(){
     return this.firstName + " " + this.lastName;
 })
 
-userSchema.pre("save",async function(this:HUserDocument & {wasNew:boolean ; confirmEmailPlainOtp?:string},next){
-    this.wasNew = this.isNew
+userSchema.pre("save",async function(this:HUserDocument,next){
     if(this.isModified("password")){
         this.password = await generateHash(this.password)
     }
     if(this.isModified("confirmEmailOtp")){
-        this.confirmEmailPlainOtp = this.confirmEmailOtp as string
         this.confirmEmailOtp = await generateHash(this.confirmEmailOtp as string)
     }
-}); 
-userSchema.post("save", async function(doc,next){
-    const that = this as HUserDocument & {wasNew:boolean ; confirmEmailPlainOtp?:string}
-    if(that.wasNew && that.confirmEmailPlainOtp){
-        emailEventEmitter.emit("confirmationEmail",{
-            to:this.email,
-            username:this.username,
-            otp:that.confirmEmailOtp
-        })        
-    }
-})
+});
 userSchema.pre(["find","findOne"],async function(next){
     const query = this.getQuery();
     if(query.paranoid === false){
